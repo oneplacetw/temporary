@@ -551,6 +551,7 @@
         jgbidInputs.forEach((input, index) => {
           const jgbid = input.value.trim();
           const tenant = tenantInputs[index].value.trim();
+          const memo = memoInputs[index].value.trim();
           
           // ✅ 驗證 JGBid 是否為數字
           if (!jgbid || !/^\d+$/.test(jgbid)) {
@@ -624,7 +625,8 @@
           return await callAppsScript('update', {
             row: data.row,
             columnG: data.columnG,
-            columnH: data.columnH
+            columnH: data.columnH,
+            columnI: data.columnI
           });
         });
 
