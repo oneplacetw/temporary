@@ -74,6 +74,8 @@
     <input
       type="text"
       id="searchNumber"
+      inputmode="numeric" 
+      pattern="[0-9]*"
       placeholder="請輸入5位數字"
       maxlength="5"
       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
@@ -119,6 +121,8 @@
             <input
               type="text"
               id="inputNumber"
+              inputmode="numeric" 
+              pattern="[0-9]*"
               placeholder="請輸入數字"
               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
             style="--tw-ring-color: #788A79;"
@@ -187,6 +191,7 @@
     const messageBox = document.getElementById('messageBox');
     const inputNumber = document.getElementById('inputNumber');
     const inputText = document.getElementById('inputText');
+    const inputMemo = document.getElementById('inputMemo'); //追加memo欄位
     const submitBtn = document.getElementById('submitBtn');
     const resetBtn = document.getElementById('resetBtn');
     const foundDataDetails = document.getElementById('foundDataDetails');
@@ -209,11 +214,11 @@
       }
     });
 
-searchDateInput.addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') {
-    searchBtn.click();
-  }
-});
+    searchDateInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      searchBtn.click();
+      }
+    });
     // ✅ 限制 JGBid 只能輸入數字
     inputNumber.addEventListener('input', (e) => {
       e.target.value = e.target.value.replace(/\D/g, '');
@@ -285,6 +290,8 @@ searchDateInput.addEventListener('keypress', (e) => {
                   type="text"
                   class="multiple-jgbid w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
                   style="--tw-ring-color: #788A79;"
+                  inputmode="numeric" 
+                  pattern="[0-9]*"
                   data-row="${match.row}"
                   placeholder="請輸入數字"
                 />
@@ -529,6 +536,7 @@ searchDateInput.addEventListener('keypress', (e) => {
       // ✅ 檢查是否為多筆輸入模式
       const isMultipleMode = !multipleInputMode.classList.contains('hidden');
       const matches = foundData.matches || [{ row: foundData.row }];
+      const memoInputs = multipleInputsContainer.querySelectorAll('.multiple-memo');
       
       let updateData = [];
       
@@ -536,6 +544,7 @@ searchDateInput.addEventListener('keypress', (e) => {
         // 多筆輸入模式：每筆資料都有獨立的欄位
         const jgbidInputs = multipleInputsContainer.querySelectorAll('.multiple-jgbid');
         const tenantInputs = multipleInputsContainer.querySelectorAll('.multiple-tenant');
+        const memoInputs = multipleInputsContainer.querySelectorAll('.multiple-memo');
         
         // 驗證所有欄位都已填寫
         let allFilled = true;
@@ -559,7 +568,8 @@ searchDateInput.addEventListener('keypress', (e) => {
           updateData.push({
             row: parseInt(input.dataset.row),
             columnG: jgbid,
-            columnH: tenant
+            columnH: tenant,
+            columnI: memo
           });
         });
         
@@ -570,7 +580,8 @@ searchDateInput.addEventListener('keypress', (e) => {
         // 單一輸入模式：所有資料共用同一組輸入
         const numValue = inputNumber.value.trim();
         const textValue = inputText.value.trim();
-
+        const memoValue = inputMemo.value.trim();
+        
         if (!numValue || !textValue) {
           showMessage('error', '請完整填寫數字和文字');
           return;
@@ -587,7 +598,8 @@ searchDateInput.addEventListener('keypress', (e) => {
           updateData.push({
             row: match.row,
             columnG: numValue,
-            columnH: textValue
+            columnH: textValue,
+            columnI: memoValue
           });
         });
       }
