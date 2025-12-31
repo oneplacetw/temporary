@@ -66,6 +66,7 @@
       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
       style="--tw-ring-color: #788A79;"
     />
+   <p class="text-xs text-gray-500 mt-1">如查詢未果可能為跨日交易，請嘗試調整日期或直接聯繫專員</p>
   </div>
 
   <!-- 再顯示數字 -->
@@ -81,7 +82,6 @@
       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
       style="--tw-ring-color: #788A79;"
     />
-    <p class="text-xs text-gray-500 mt-1">注意不要變成全形文字</p>
   </div>
         
         <button
@@ -117,7 +117,7 @@
         <!-- ✅ 單一輸入模式（default，switch 未開啟時） -->
         <div id="singleInputMode" class="space-y-6">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">填寫ＪＧＢid</label>
+            <label class="block text-sm font-medium text-gray-700 mb-2">填寫ＪＧＢid或房間編號</label>
             <input
               type="text"
               id="inputNumber"
@@ -140,11 +140,11 @@
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">繳費細項</label>
+            <label class="block text-sm font-medium text-gray-700 mb-2">費用備註</label>
             <input
               type="text"
               id="inputMemo"
-              placeholder="例如：1月房租、押金等"
+              placeholder="例如：1月房租、訂金、兩押一租、水電費等..."
               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
             style="--tw-ring-color: #788A79;"
            />
@@ -285,7 +285,7 @@
             <p class="font-semibold text-gray-800 mb-3">第 ${index + 1} 筆</p>
             <div class="space-y-3">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">JGBid</label>
+                <label class="block text-sm font-medium text-gray-700 mb-2">JGBid或房間編號</label>
                 <input
                   type="text"
                   class="multiple-jgbid w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
@@ -307,13 +307,13 @@
                 />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">繳費細項</label>
+                <label class="block text-sm font-medium text-gray-700 mb-2">費用備註</label>
                 <input
                   type="text"
                   class="multiple-memo w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
                   style="--tw-ring-color: #788A79;"
                   data-row="${match.row}"
-                  placeholder="例如：1月房租"
+                  placeholder="例如：1月房租、訂金、兩押一租、水電費等..."
                 />
               </div>
             </div>
