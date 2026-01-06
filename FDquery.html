@@ -121,9 +121,7 @@
             <input
               type="text"
               id="inputNumber"
-              inputmode="numeric" 
-              pattern="[0-9]*"
-              placeholder="請輸入數字"
+              placeholder="請確實輸入"
               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
             style="--tw-ring-color: #788A79;"
             />
@@ -219,10 +217,7 @@
       searchBtn.click();
       }
     });
-    // ✅ 限制 JGBid 只能輸入數字
-    inputNumber.addEventListener('input', (e) => {
-      e.target.value = e.target.value.replace(/\D/g, '');
-    });
+
 
     // ✅ Switch 切換事件
     samePersonSwitch.addEventListener('change', (e) => {
@@ -290,10 +285,8 @@
                   type="text"
                   class="multiple-jgbid w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
                   style="--tw-ring-color: #788A79;"
-                  inputmode="numeric" 
-                  pattern="[0-9]*"
                   data-row="${match.row}"
-                  placeholder="請輸入數字"
+                  placeholder="請確實輸入"
                 />
               </div>
               <div>
