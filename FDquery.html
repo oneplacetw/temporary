@@ -1,4 +1,4 @@
-  <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
@@ -542,10 +542,10 @@
           const memo = memoInputs[index].value.trim();
           
           // ✅ 驗證 JGBid 是否為數字
-          if (!jgbid || !/^\d+$/.test(jgbid)) {
-            allFilled = false;
-            showMessage('error', `第 ${index + 1} 筆的 JGBid 必須為數字格式`);
-            return;
+        if (!jgbid) {
+          allFilled = false;
+          showMessage('error', `第 ${index + 1} 筆的 JGBid/房間編號未填寫`);
+          return;
           }
           
           if (!tenant) {
@@ -576,11 +576,6 @@
           return;
         }
 
-        // ✅ 驗證 numValue 是否為數字格式
-        if (!/^\d+$/.test(numValue)) {
-          showMessage('error', 'JGBid 必須為數字格式');
-          return;
-        }
 
         // 所有匹配的 row 都使用相同的值
         matches.forEach(match => {
