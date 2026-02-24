@@ -1,178 +1,679 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
+
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>多圖片上傳系統</title>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>多圖片上傳與 AI 辨識系統</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* 隱藏原生捲軸但保留滑動功能，讓預覽區更美觀 */
-    .no-scrollbar::-webkit-scrollbar {
-      display: none;
+    :root {
+      --accent: #788A79;
+      --dark: #333333;
+      --bg: #E8EAEB;
     }
-    .no-scrollbar {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
+
+    * {
+      box-sizing: border-box;
     }
+
+    /* 確保 body 滿版無邊界，電腦版顯示置中底色 */
+    body,
+    html {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg);
+      height: 100%;
+    }
+
     .drag-over {
-      background-color: #f3f4f6;
-      border-color: #788A79 !important;
+      background-color: #f0f4f0 !important;
+      border-color: var(--accent) !important;
+    }
+
+    @keyframes shimmer {
+      0% {
+        background-position: -400px 0;
+      }
+
+      100% {
+        background-position: 400px 0;
+      }
+    }
+
+    .skeleton {
+      background: linear-gradient(90deg, #3a3a3a 25%, #4a4a4a 50%, #3a3a3a 75%);
+      background-size: 400px 100%;
+      animation: shimmer 1.2s infinite;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .img-fade {
+      animation: fadeIn 0.2s ease forwards;
+    }
+
+    /* Lightbox */
+    #lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+
+    #lightbox.active {
+      display: flex;
+    }
+
+    #lightboxImg {
+      max-width: 90vw;
+      max-height: 90vh;
+      border-radius: 8px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    #lightboxClose {
+      position: absolute;
+      top: 20px;
+      right: 24px;
+      color: #fff;
+      font-size: 32px;
+      cursor: pointer;
+      line-height: 1;
+      opacity: 0.7;
+      transition: opacity 0.15s;
+    }
+
+    #lightboxClose:hover {
+      opacity: 1;
+    }
+
+    /* Loading dots */
+    @keyframes blink {
+
+      0%,
+      80%,
+      100% {
+        opacity: 0;
+      }
+
+      40% {
+        opacity: 1;
+      }
+    }
+
+    .dot {
+      display: inline-block;
+      animation: blink 1.4s infinite both;
+    }
+
+    .dot:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .dot:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    /* Preview slider in Step 1 */
+    #previewArea {
+      position: relative;
+      background-color: #333333;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    #previewSlider {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.3s ease;
+    }
+
+    .slide-item {
+      flex-shrink: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .slide-item img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .slide-delete-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 26px;
+      height: 26px;
+      background: rgba(0, 0, 0, 0.55);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      font-size: 16px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+
+    .slide-delete-btn:hover {
+      background: rgba(200, 30, 30, 0.85);
+    }
+
+    .nav-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(0, 0, 0, 0.45);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+    }
+
+    .nav-arrow:hover {
+      background: rgba(0, 0, 0, 0.7);
+    }
+
+    #navPrev {
+      left: 8px;
+    }
+
+    #navNext {
+      right: 8px;
+    }
+
+    #posIndicator {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.5);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 2px 10px;
+      border-radius: 999px;
+      pointer-events: none;
+      z-index: 20;
+      white-space: nowrap;
     }
   </style>
 </head>
-<body class="min-h-screen font-sans" style="background-color: #E8EAEB;">
-  <div id="app" class="flex items-center justify-center min-h-screen p-4">
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden flex flex-col">
-      
-      <div id="previewArea" class="bg-[#333333] h-56 w-full flex items-center justify-start overflow-x-auto no-scrollbar p-4 gap-3 relative">
-        <div id="previewPlaceholder" class="w-full text-center text-gray-400 text-sm">
-          圖片預覽區
+
+<body class="font-sans flex justify-center">
+
+  <div id="lightbox">
+    <span id="lightboxClose">&times;</span>
+    <img id="lightboxImg" src="" alt="preview">
+  </div>
+
+  <div
+    class="bg-white w-full sm:max-w-md flex flex-col relative h-screen sm:shadow-2xl sm:border-x sm:border-gray-300 overflow-hidden">
+
+    <div id="step1Container" class="flex flex-col h-full flex-1">
+      <div id="previewArea" class="w-full shrink-0" style="aspect-ratio: 4/3; min-height: 220px;">
+        <div id="emptyState"
+          class="w-full h-full flex flex-col items-center justify-center gap-2 text-gray-400 select-none pointer-events-none">
+          <svg width="38" height="38" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.3">
+            <rect x="3" y="3" width="18" height="18" rx="3" />
+            <circle cx="8.5" cy="8.5" r="1.5" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 15l-5-5L5 21" />
+          </svg>
+          <span class="text-sm">圖片預覽區</span>
+        </div>
+
+        <div id="sliderWrapper" class="hidden w-full h-full relative">
+          <div id="previewSlider"></div>
+          <button id="navPrev" class="nav-arrow">&#8249;</button>
+          <button id="navNext" class="nav-arrow">&#8250;</button>
+          <div id="posIndicator">1 / 1</div>
         </div>
       </div>
 
-      <div class="p-6 md:p-8 space-y-6">
+      <div class="p-6 space-y-5 flex-1 flex flex-col justify-center">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-3">Upload a file</label>
-          
-          <div 
-            id="dropzone" 
-            class="border-2 border-dashed border-gray-300 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-colors duration-200 hover:bg-gray-50"
-          >
+          <label class="block text-sm font-medium text-gray-700 mb-2">Upload images</label>
+          <div id="dropzone"
+            class="border-2 border-dashed border-gray-300 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-colors duration-200 hover:bg-gray-50">
             <svg class="w-8 h-8 text-gray-400 mb-2" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"></path>
+              <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
             </svg>
-            <p class="text-sm text-gray-500 text-center">
-              Drag & drop a file or <span class="underline">browse</span>
+            <p class="text-sm text-gray-500 text-center leading-5">
+              Drag &amp; drop files or <span class="underline">browse</span>
             </p>
-            <input 
-              type="file" 
-              id="fileInput" 
-              class="hidden" 
-              multiple 
-              accept="image/*"
-            />
+            <p class="text-xs text-gray-400 mt-1">最多 10 張・每張 5 MB 以內</p>
+            <input type="file" id="fileInput" class="hidden" multiple accept="image/*" />
           </div>
-          <p id="fileCountMsg" class="text-xs text-[#788A79] mt-2 hidden">已選擇 0 張圖片</p>
+          <p id="errorMsg" class="text-xs text-red-500 mt-1.5 hidden"></p>
         </div>
-        
-        <button
-          id="submitBtn"
-          class="w-full text-white py-3 rounded-lg font-medium transition-colors hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"
-          style="background-color: #000000;"
-        >
-          Submit
+
+        <button id="nextBtn"
+          class="w-full text-white py-3 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed mt-auto"
+          style="background-color:#788A79; --tw-ring-color:#788A79;">
+          Next 進行 AI 辨識
         </button>
       </div>
     </div>
+
+    <div id="step2Container" class="hidden flex-col h-full w-full relative flex-1">
+
+      <div class="bg-[#788A79] text-white p-4 flex items-center justify-center relative font-medium shrink-0">
+        <img src="https://r-forms.oneplace.com.tw/gray.png" alt="Logo" class="absolute left-4 h-6 object-contain">
+        <span>資料確認與補全</span>
+      </div>
+
+      <div id="prevEntryBtn"
+        class="absolute left-0 top-[110px] bg-gray-500 text-white px-1.5 py-4 rounded-r-md cursor-pointer transition-colors hover:bg-gray-600 flex flex-col items-center gap-1 text-sm font-medium z-10 hidden shadow-md">
+        <span>&lt;</span><span>上</span><span>一</span><span>筆</span>
+      </div>
+      <div id="nextEntryBtn"
+        class="absolute right-0 top-[110px] bg-[#7f8c8d] text-white px-1.5 py-4 rounded-l-md cursor-pointer transition-colors hover:bg-gray-500 flex flex-col items-center gap-1 text-sm font-medium z-10 hidden shadow-md">
+        <span>&gt;</span><span>下</span><span>一</span><span>筆</span>
+      </div>
+
+      <div id="step2ScrollArea" class="flex-1 overflow-y-auto p-6 space-y-5">
+
+        <div class="flex flex-col items-start gap-3 border-b border-gray-100 pb-4">
+          <div id="step2-counter"
+            class="bg-gray-500 text-white px-3 py-1 rounded-full text-sm font-medium leading-none shadow-sm">
+            1/2
+          </div>
+          <img id="step2-main-thumb" src=""
+            class="h-24 w-24 object-cover rounded-md border border-gray-300 cursor-pointer transition-transform hover:scale-105 shadow-sm"
+            title="點擊放大">
+          <p class="text-xs font-medium text-gray-500">上傳的圖片 (點擊可放大)</p>
+        </div>
+
+        <div class="space-y-4 pb-4">
+
+          <div>
+            <label class="block text-sm font-bold text-gray-800 mb-1">收件地址或案場簡稱</label>
+            <input type="text" id="ai-address"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:outline-none focus:border-transparent text-base font-medium"
+              style="--tw-ring-color: #788A79;">
+          </div>
+
+          <div>
+            <label class="block text-sm font-bold text-gray-800 mb-1">案場編號</label>
+            <div class="flex gap-3">
+              <input type="text" id="ai-project-id"
+                class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:outline-none focus:border-transparent text-base"
+                style="--tw-ring-color: #788A79;">
+              <button id="update-id-btn"
+                class="px-5 py-3 rounded-lg font-medium text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                style="background-color: #788A79;" disabled>
+                更新編號
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-bold text-gray-800 mb-1">下單平台</label>
+            <input type="text" id="ai-platform"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:outline-none focus:border-transparent text-base"
+              style="--tw-ring-color: #788A79;">
+          </div>
+
+          <div class="flex gap-4">
+            <div class="flex-1">
+              <label class="block text-sm font-bold text-gray-800 mb-1">總金額</label>
+              <input type="number" id="ai-total"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:outline-none focus:border-transparent text-base"
+                style="--tw-ring-color: #788A79;">
+            </div>
+            <div class="flex-1">
+              <label class="block text-sm font-bold text-gray-800 mb-1">發票稅額</label>
+              <input type="number" id="ai-tax"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:outline-none focus:border-transparent text-base"
+                style="--tw-ring-color: #788A79;">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-bold text-gray-800 mb-1">備註</label>
+            <textarea id="ai-memo" rows="2"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:outline-none focus:border-transparent resize-none text-base"
+              style="--tw-ring-color: #788A79;"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div
+        class="p-4 bg-white border-t border-gray-100 shrink-0 flex gap-3 z-20 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+        <button id="backBtn"
+          class="flex-1 bg-gray-200 text-gray-700 py-3.5 rounded-lg font-bold hover:bg-gray-300 transition-colors text-base">
+          返回重選
+        </button>
+        <button id="finalSubmitBtn" class="flex-1 text-white py-3.5 rounded-lg font-bold transition-colors text-base"
+          style="background-color: #788A79;">
+          確認送出
+        </button>
+      </div>
+
+    </div>
+
   </div>
 
   <script>
     const dropzone = document.getElementById('dropzone');
     const fileInput = document.getElementById('fileInput');
-    const previewArea = document.getElementById('previewArea');
-    const previewPlaceholder = document.getElementById('previewPlaceholder');
-    const fileCountMsg = document.getElementById('fileCountMsg');
-    const submitBtn = document.getElementById('submitBtn');
+    const emptyState = document.getElementById('emptyState');
+    const sliderWrapper = document.getElementById('sliderWrapper');
+    const previewSlider = document.getElementById('previewSlider');
+    const posIndicator = document.getElementById('posIndicator');
+    const errorMsg = document.getElementById('errorMsg');
+    const nextBtn = document.getElementById('nextBtn');
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightboxImg');
+    const lightboxClose = document.getElementById('lightboxClose');
 
+    const step1Container = document.getElementById('step1Container');
+    const step2Container = document.getElementById('step2Container');
+
+    const step2Counter = document.getElementById('step2-counter');
+    const step2MainThumb = document.getElementById('step2-main-thumb');
+    const prevEntryBtn = document.getElementById('prevEntryBtn');
+    const nextEntryBtn = document.getElementById('nextEntryBtn');
+    const step2ScrollArea = document.getElementById('step2ScrollArea');
+    const updateIdBtn = document.getElementById('update-id-btn');
+
+    const backBtn = document.getElementById('backBtn');
+    const finalSubmitBtn = document.getElementById('finalSubmitBtn');
+
+    const fields = {
+      address: document.getElementById('ai-address'),
+      projectId: document.getElementById('ai-project-id'),
+      platform: document.getElementById('ai-platform'),
+      total: document.getElementById('ai-total'),
+      tax: document.getElementById('ai-tax'),
+      memo: document.getElementById('ai-memo')
+    };
+
+    const MAX_COUNT = 10;
+    const MAX_SIZE_MB = 5;
     let selectedFiles = [];
+    let currentIndex = 0;
+    let aiResults = [];
+    let currentEditIndex = 0;
 
-    // 點擊虛線區塊觸發 input file
-    dropzone.addEventListener('click', () => {
-      fileInput.click();
+    // 追蹤當前地址，用於判斷是否啟用「更新編號」按鈕
+    let savedAddressForCurrentEntry = "";
+
+    // ── Dropzone & Step 1 Logic ──────────────────────────────
+    dropzone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', e => { handleFiles(e.target.files); fileInput.value = ''; });
+    dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag-over'); });
+    dropzone.addEventListener('dragleave', e => { e.preventDefault(); dropzone.classList.remove('drag-over'); });
+    dropzone.addEventListener('drop', e => {
+      e.preventDefault(); dropzone.classList.remove('drag-over');
+      if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
     });
 
-    // 處理 Input 檔案改變
-    fileInput.addEventListener('change', (e) => {
-      handleFiles(e.target.files);
-    });
+    document.getElementById('navPrev').addEventListener('click', () => goTo(currentIndex - 1));
+    document.getElementById('navNext').addEventListener('click', () => goTo(currentIndex + 1));
 
-    // --- 拖曳事件處理 ---
-    dropzone.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      dropzone.classList.add('drag-over');
-    });
-
-    dropzone.addEventListener('dragleave', (e) => {
-      e.preventDefault();
-      dropzone.classList.remove('drag-over');
-    });
-
-    dropzone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      dropzone.classList.remove('drag-over');
-      
-      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-        // 將拖曳的檔案賦值給 input
-        fileInput.files = e.dataTransfer.files;
-        handleFiles(e.dataTransfer.files);
-      }
-    });
-
-    // 處理檔案並生成預覽
     function handleFiles(files) {
-      // 過濾出圖片檔案
-      const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
-      
-      if (imageFiles.length === 0) return;
-
-      selectedFiles = imageFiles;
-
-      // 更新提示文字
-      fileCountMsg.textContent = `已選擇 ${selectedFiles.length} 張圖片`;
-      fileCountMsg.classList.remove('hidden');
-
-      // 清空預覽區的舊圖片與佔位文字
-      previewArea.innerHTML = '';
-
-      // 產生預覽圖
-      selectedFiles.forEach(file => {
+      const incoming = Array.from(files).filter(f => f.type.startsWith('image/'));
+      if (!incoming.length) return;
+      const valid = [];
+      for (const f of incoming) {
+        if (selectedFiles.length + valid.length >= MAX_COUNT) break;
+        if (f.size <= MAX_SIZE_MB * 1024 * 1024) valid.push(f);
+      }
+      valid.forEach(file => {
+        const idx = selectedFiles.length;
+        selectedFiles.push({ file, dataURL: null });
+        addSlide(idx, null);
         const reader = new FileReader();
-        
-        reader.onload = (e) => {
-          // 建立圖片容器
-          const imgContainer = document.createElement('div');
-          imgContainer.className = 'h-full flex-shrink-0 relative group rounded-md overflow-hidden bg-black';
-          
-          // 建立圖片元素
-          const img = document.createElement('img');
-          img.src = e.target.result;
-          img.className = 'h-full w-auto object-contain';
-          
-          imgContainer.appendChild(img);
-          previewArea.appendChild(imgContainer);
+        reader.onload = e => {
+          selectedFiles[idx].dataURL = e.target.result;
+          updateSlideImage(idx, e.target.result);
+          updateUI();
         };
-        
         reader.readAsDataURL(file);
+      });
+      currentIndex = selectedFiles.length - valid.length;
+      updateUI();
+    }
+
+    function addSlide(idx, dataURL) {
+      emptyState.style.display = 'none';
+      sliderWrapper.classList.remove('hidden');
+      const slide = document.createElement('div');
+      slide.className = 'slide-item';
+      slide.dataset.idx = idx;
+      slide.innerHTML = dataURL ? slideHTML(idx, dataURL) : `<div class="skeleton rounded-md" style="width:80%;height:80%;"></div>`;
+      if (dataURL) bindSlideEvents(slide);
+      previewSlider.appendChild(slide);
+    }
+
+    function slideHTML(idx, dataURL) {
+      return `<img src="${dataURL}" class="img-fade cursor-pointer" draggable="false" style="max-width:100%;max-height:100%;object-fit:contain;display:block;"><button class="slide-delete-btn" data-idx="${idx}">&#x2715;</button>`;
+    }
+
+    function bindSlideEvents(slide) {
+      slide.querySelector('img').onclick = () => openLightbox(slide.querySelector('img').src);
+      slide.querySelector('.slide-delete-btn').onclick = e => { e.stopPropagation(); removeImage(parseInt(e.currentTarget.dataset.idx)); };
+    }
+
+    function updateSlideImage(idx, dataURL) {
+      const slide = previewSlider.querySelector(`.slide-item[data-idx="${idx}"]`);
+      if (slide) { slide.innerHTML = slideHTML(idx, dataURL); bindSlideEvents(slide); }
+    }
+
+    function removeImage(idx) {
+      selectedFiles.splice(idx, 1);
+      currentIndex = Math.max(0, Math.min(selectedFiles.length - 1, currentIndex));
+      rebuildSlider();
+    }
+
+    function rebuildSlider() {
+      previewSlider.innerHTML = '';
+      if (!selectedFiles.length) { sliderWrapper.classList.add('hidden'); emptyState.style.display = 'flex'; updateUI(); return; }
+      selectedFiles.forEach((item, i) => addSlide(i, item.dataURL));
+      updateUI();
+    }
+
+    function goTo(idx) {
+      if (!selectedFiles.length) return;
+      currentIndex = Math.max(0, Math.min(selectedFiles.length - 1, idx));
+      updateUI();
+    }
+
+    function updateUI() {
+      previewSlider.style.transform = `translateX(-${currentIndex * 100}%)`;
+      posIndicator.textContent = selectedFiles.length ? `${currentIndex + 1} / ${selectedFiles.length}` : '0 / 0';
+      document.getElementById('navPrev').style.display = selectedFiles.length > 1 && currentIndex > 0 ? '' : 'none';
+      document.getElementById('navNext').style.display = selectedFiles.length > 1 && currentIndex < selectedFiles.length - 1 ? '' : 'none';
+    }
+
+    function openLightbox(src) { lightboxImg.src = src; lightbox.classList.add('active'); }
+    lightboxClose.onclick = () => { lightbox.classList.remove('active'); };
+
+    // ── AI 辨識模擬與多筆資料處理 ──────────────────────────────
+    async function fetchN8nAI(base64Images) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          // 模擬回傳的資料，此處地址帶入圖中的範例
+          const mockResults = base64Images.map((_, index) => ({
+            address: `台中市西區中華路一段2號四樓`,
+            projectId: `268`,
+            platform: "MOMO",
+            total: 2244 + (index * 100),
+            tax: 107,
+            memo: `【澄品】塑鋼電器櫃 寬65x深43x高112 (圖 ${index + 1})`
+          }));
+          resolve(mockResults);
+        }, 1500);
       });
     }
 
-    // 送出按鈕事件
-    submitBtn.addEventListener('click', () => {
-      if (selectedFiles.length === 0) {
-        alert('請先上傳至少一張圖片！');
-        return;
+    // 模擬呼叫 Ragic API 進行模糊比對
+    async function simulateRagicQuery(addressStr) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          // 簡單的關鍵字模擬邏輯
+          if (addressStr.includes('台中')) resolve('268');
+          else if (addressStr.includes('內湖') || addressStr.includes('台北')) resolve('312');
+          else resolve('999'); // 找不到時的預設值
+        }, 800);
+      });
+    }
+
+    function saveCurrentEntry() {
+      if (!aiResults[currentEditIndex]) return;
+      aiResults[currentEditIndex].address = fields.address.value;
+      aiResults[currentEditIndex].projectId = fields.projectId.value;
+      aiResults[currentEditIndex].platform = fields.platform.value;
+      aiResults[currentEditIndex].total = fields.total.value;
+      aiResults[currentEditIndex].tax = fields.tax.value;
+      aiResults[currentEditIndex].memo = fields.memo.value;
+    }
+
+    function loadEntry(index) {
+      saveCurrentEntry();
+      currentEditIndex = index;
+      const data = aiResults[index];
+      const imgUrl = selectedFiles[index].dataURL;
+
+      step2Counter.textContent = `${index + 1} / ${selectedFiles.length}`;
+      step2MainThumb.src = imgUrl;
+      step2MainThumb.onclick = () => openLightbox(imgUrl);
+
+      // 載入資料
+      savedAddressForCurrentEntry = data.address || '';
+      fields.address.value = savedAddressForCurrentEntry;
+      fields.projectId.value = data.projectId || '';
+      fields.platform.value = data.platform || '';
+      fields.total.value = data.total || '';
+      fields.tax.value = data.tax || '';
+      fields.memo.value = data.memo || '';
+
+      // 重置更新按鈕狀態
+      updateIdBtn.disabled = true;
+
+      prevEntryBtn.classList.toggle('hidden', index === 0);
+      nextEntryBtn.classList.toggle('hidden', index === selectedFiles.length - 1);
+    }
+
+    // 監聽地址欄位修改事件
+    fields.address.addEventListener('input', (e) => {
+      // 若欄位內容與目前存儲的內容不同，則解除 disabled
+      if (e.target.value.trim() !== savedAddressForCurrentEntry.trim()) {
+        updateIdBtn.disabled = false;
+      } else {
+        updateIdBtn.disabled = true;
       }
-      
-      // 在此處加入實際的上傳邏輯 (例如 FormData & fetch API)
-      submitBtn.innerHTML = 'Submitting...';
-      submitBtn.disabled = true;
-      
-      console.log('準備送出的檔案:', selectedFiles);
-      
-      // 模擬上傳延遲
-      setTimeout(() => {
-        alert(`成功送出 ${selectedFiles.length} 張圖片！`);
-        submitBtn.innerHTML = 'Submit';
-        submitBtn.disabled = false;
-        
-        // 重置表單
-        fileInput.value = '';
-        selectedFiles = [];
-        previewArea.innerHTML = '<div class="w-full text-center text-gray-400 text-sm">圖片預覽區</div>';
-        fileCountMsg.classList.add('hidden');
-      }, 1000);
     });
+
+    // 點擊「更新編號」按鈕
+    updateIdBtn.addEventListener('click', async () => {
+      const newAddress = fields.address.value;
+      updateIdBtn.disabled = true;
+      updateIdBtn.innerHTML = '<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>';
+
+      try {
+        const newProjectId = await simulateRagicQuery(newAddress);
+        fields.projectId.value = newProjectId;
+
+        // 更新追蹤的地址，讓按鈕再次進入 disabled 狀態，直到下次修改
+        savedAddressForCurrentEntry = newAddress;
+        saveCurrentEntry();
+      } finally {
+        updateIdBtn.innerHTML = '更新編號';
+      }
+    });
+
+    prevEntryBtn.onclick = () => { if (currentEditIndex > 0) loadEntry(currentEditIndex - 1); };
+    nextEntryBtn.onclick = () => { if (currentEditIndex < selectedFiles.length - 1) loadEntry(currentEditIndex + 1); };
+
+    // 手勢滑動切換
+    let touchStartX = 0;
+    let touchStartY = 0;
+
+    step2ScrollArea.addEventListener('touchstart', e => {
+      touchStartX = e.changedTouches[0].clientX;
+      touchStartY = e.changedTouches[0].clientY;
+    }, { passive: true });
+
+    step2ScrollArea.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      const dy = e.changedTouches[0].clientY - touchStartY;
+
+      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+        if (dx < 0 && currentEditIndex < selectedFiles.length - 1) {
+          loadEntry(currentEditIndex + 1);
+        } else if (dx > 0 && currentEditIndex > 0) {
+          loadEntry(currentEditIndex - 1);
+        }
+      }
+    }, { passive: true });
+
+    // --- Next: 觸發辨識 ---
+    nextBtn.addEventListener('click', async () => {
+      if (!selectedFiles.length) return;
+      nextBtn.disabled = true;
+      nextBtn.innerHTML = `AI 辨識中<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>`;
+
+      try {
+        const base64Images = selectedFiles.map(f => f.dataURL);
+        aiResults = await fetchN8nAI(base64Images);
+
+        loadEntry(0);
+        step1Container.classList.add('hidden');
+        step2Container.classList.remove('hidden');
+      } finally {
+        nextBtn.innerHTML = 'Next 進行 AI 辨識';
+        nextBtn.disabled = false;
+      }
+    });
+
+    backBtn.onclick = () => {
+      step2Container.classList.add('hidden');
+      step1Container.classList.remove('hidden');
+    };
+
+    finalSubmitBtn.onclick = () => {
+      saveCurrentEntry();
+      console.log("準備送出的多筆資料:", aiResults);
+      alert(`資料已成功送出！共處理了 ${aiResults.length} 筆單據。`);
+      location.reload();
+    };
+
+    updateUI();
   </script>
 </body>
+
 </html>
