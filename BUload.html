@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>多圖片上傳系統</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* 隱藏原生捲軸但保留滑動功能，讓預覽區更美觀 */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .drag-over {
+      background-color: #f3f4f6;
+      border-color: #788A79 !important;
+    }
+  </style>
+</head>
+<body class="min-h-screen font-sans" style="background-color: #E8EAEB;">
+  <div id="app" class="flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden flex flex-col">
+      
+      <div id="previewArea" class="bg-[#333333] h-56 w-full flex items-center justify-start overflow-x-auto no-scrollbar p-4 gap-3 relative">
+        <div id="previewPlaceholder" class="w-full text-center text-gray-400 text-sm">
+          圖片預覽區
+        </div>
+      </div>
+
+      <div class="p-6 md:p-8 space-y-6">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-3">Upload a file</label>
+          
+          <div 
+            id="dropzone" 
+            class="border-2 border-dashed border-gray-300 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-colors duration-200 hover:bg-gray-50"
+          >
+            <svg class="w-8 h-8 text-gray-400 mb-2" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"></path>
+            </svg>
+            <p class="text-sm text-gray-500 text-center">
+              Drag & drop a file or <span class="underline">browse</span>
+            </p>
+            <input 
+              type="file" 
+              id="fileInput" 
+              class="hidden" 
+              multiple 
+              accept="image/*"
+            />
+          </div>
+          <p id="fileCountMsg" class="text-xs text-[#788A79] mt-2 hidden">已選擇 0 張圖片</p>
+        </div>
+        
+        <button
+          id="submitBtn"
+          class="w-full text-white py-3 rounded-lg font-medium transition-colors hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"
+          style="background-color: #000000;"
+        >
+          Submit
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const previewArea = document.getElementById('previewArea');
+    const previewPlaceholder = document.getElementById('previewPlaceholder');
+    const fileCountMsg = document.getElementById('fileCountMsg');
+    const submitBtn = document.getElementById('submitBtn');
+
+    let selectedFiles = [];
+
+    // 點擊虛線區塊觸發 input file
+    dropzone.addEventListener('click', () => {
+      fileInput.click();
+    });
+
+    // 處理 Input 檔案改變
+    fileInput.addEventListener('change', (e) => {
+      handleFiles(e.target.files);
+    });
+
+    // --- 拖曳事件處理 ---
+    dropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropzone.classList.add('drag-over');
+    });
+
+    dropzone.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('drag-over');
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('drag-over');
+      
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        // 將拖曳的檔案賦值給 input
+        fileInput.files = e.dataTransfer.files;
+        handleFiles(e.dataTransfer.files);
+      }
+    });
+
+    // 處理檔案並生成預覽
+    function handleFiles(files) {
+      // 過濾出圖片檔案
+      const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
+      
+      if (imageFiles.length === 0) return;
+
+      selectedFiles = imageFiles;
+
+      // 更新提示文字
+      fileCountMsg.textContent = `已選擇 ${selectedFiles.length} 張圖片`;
+      fileCountMsg.classList.remove('hidden');
+
+      // 清空預覽區的舊圖片與佔位文字
+      previewArea.innerHTML = '';
+
+      // 產生預覽圖
+      selectedFiles.forEach(file => {
+        const reader = new FileReader();
+        
+        reader.onload = (e) => {
+          // 建立圖片容器
+          const imgContainer = document.createElement('div');
+          imgContainer.className = 'h-full flex-shrink-0 relative group rounded-md overflow-hidden bg-black';
+          
+          // 建立圖片元素
+          const img = document.createElement('img');
+          img.src = e.target.result;
+          img.className = 'h-full w-auto object-contain';
+          
+          imgContainer.appendChild(img);
+          previewArea.appendChild(imgContainer);
+        };
+        
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // 送出按鈕事件
+    submitBtn.addEventListener('click', () => {
+      if (selectedFiles.length === 0) {
+        alert('請先上傳至少一張圖片！');
+        return;
+      }
+      
+      // 在此處加入實際的上傳邏輯 (例如 FormData & fetch API)
+      submitBtn.innerHTML = 'Submitting...';
+      submitBtn.disabled = true;
+      
+      console.log('準備送出的檔案:', selectedFiles);
+      
+      // 模擬上傳延遲
+      setTimeout(() => {
+        alert(`成功送出 ${selectedFiles.length} 張圖片！`);
+        submitBtn.innerHTML = 'Submit';
+        submitBtn.disabled = false;
+        
+        // 重置表單
+        fileInput.value = '';
+        selectedFiles = [];
+        previewArea.innerHTML = '<div class="w-full text-center text-gray-400 text-sm">圖片預覽區</div>';
+        fileCountMsg.classList.add('hidden');
+      }, 1000);
+    });
+  </script>
+</body>
+</html>
