@@ -564,40 +564,39 @@
     function openLightbox(src) { lightboxImg.src = src; lightbox.classList.add('active'); }
     lightboxClose.onclick = () => { lightbox.classList.remove('active'); };
 
-    // ── AI 辨識與多筆資料處理 ──────────────────────────────
-    async function fetchN8nAI(base64Images) {
-      const response = await fetch(
-        'https://kh.oneplace.com.tw/webhook/5282a653-7c4c-4f4f-af7e-b9afe50cde0c',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            images: base64Images.map((dataURL, index) => ({
-              index,
-              dataURL
-            }))
-          })
-        }
-      );
-      if (!response.ok) throw new Error(`Webhook 回應錯誤：${response.status}`);
-      const raw = await response.json();
-
-      // 將 n8n 回傳的欄位對應到 HTML 欄位
-      // 支援單筆物件或陣列（與上傳圖片數量相同）
-      const rawArray = Array.isArray(raw) ? raw : [raw];
-      return rawArray.map(item => {
-        const amount = Number(item.order_amount) || 0;
-        const tax = Math.round(amount * 5 / 105); // 內含稅5%
-        return {
-          address: item.recipient_address || '',
-          projectId: item.project_id || '',
-          platform: item.platform || '',
-          total: amount || '',
-          tax: tax || '',
-          memo: amount ? `訂單金額：${amount}` : ''
-        };
-      });
+// ── AI 辨識與多筆資料處理 ──────────────────────────────
+async function fetchN8nAI(base64Images) {
+  const response = await fetch(
+    'https://kh.oneplace.com.tw/webhook/5282a653-7c4c-4f4f-af7e-b9afe50cde0c',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        images: base64Images.map((dataURL, index) => ({
+          index,
+          dataURL
+        }))
+      })
     }
+  );
+  if (!response.ok) throw new Error(`Webhook 回應錯誤：${response.status}`);
+  const raw = await response.json();
+
+  const rawArray = Array.isArray(raw) ? raw : [raw];
+  return rawArray.map(item => {
+    const amount = Number(item.order_amount) || 0;
+    const tax = Math.round(amount * 5 / 105); 
+    return {
+      address: item.recipient_address || '',
+      // 🌟 重點修改：對應 n8n 回傳的 projectId
+      projectId: item.projectId || '', 
+      platform: item.platform || '',
+      total: amount || '',
+      tax: tax || '',
+      memo: item.order_date ? `訂單日期：${item.order_date}` : ''
+    };
+  });
+}
 
     async function simulateRagicQuery(addressStr) {
       return new Promise((resolve) => {
@@ -671,10 +670,13 @@ function loadEntry(index, skipSave = false) {
         const newProjectId = data.projectId ?? '';
         if (!newProjectId) console.warn('Webhook 未回傳 projectId，請確認 n8n 流程');
         fields.projectId.value = newProjectId;
+        aiResults[currentEditIndex].projectId = newProjectId;
         savedAddressForCurrentEntry = newAddress;
         saveCurrentEntry();
       } finally {
         updateIdBtn.innerHTML = '更新編號';
+// 額外確保按鈕狀態正確（地址若相同則禁用，不同則啟用）
+        updateIdBtn.disabled = (fields.address.value.trim() === savedAddressForCurrentEntry.trim());        
       }
     });
 
