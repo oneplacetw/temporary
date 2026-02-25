@@ -572,10 +572,7 @@ async function fetchN8nAI(base64Images) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        images: base64Images.map((dataURL, index) => ({
-          index,
-          dataURL
-        }))
+        images: base64Images.map((dataURL, index) => ({ index, dataURL }))
       })
     }
   );
@@ -588,8 +585,7 @@ async function fetchN8nAI(base64Images) {
     const tax = Math.round(amount * 5 / 105); 
     return {
       address: item.recipient_address || '',
-      // 🌟 重點修改：對應 n8n 回傳的 projectId
-      projectId: item.projectId || '', 
+      projectId: item.projectId || '',  // 🌟 對應 n8n 的 projectId
       platform: item.platform || '',
       total: amount || '',
       tax: tax || '',
@@ -620,13 +616,17 @@ async function fetchN8nAI(base64Images) {
 
 // 加入 skipSave 參數，預設為 false
 function loadEntry(index, skipSave = false) {
-  // 只有在非跳過狀態下，才把畫面內容存起來
+// 1. 先確認索引有效性
+  if (index < 0 || index >= selectedFiles.length) return;
+  
+  // 2. 只有在非初始載入時，才儲存上一筆編輯中的資料
   if (!skipSave) {
     saveCurrentEntry();
   }
   
+  // 3. 更新全域編輯索引
   currentEditIndex = index;
-  const data = aiResults[index];
+  const data = aiResults[index]|| {};
   const imgUrl = selectedFiles[index].dataURL;
 
   step2Counter.textContent = `${index + 1} / ${selectedFiles.length}`;
@@ -643,8 +643,20 @@ function loadEntry(index, skipSave = false) {
 
   updateIdBtn.disabled = true;
 
-  prevEntryBtn.classList.toggle('hidden', index === 0);
-  nextEntryBtn.classList.toggle('hidden', index === selectedFiles.length - 1);
+if (index === 0) {
+    prevEntryBtn.classList.add('hidden');
+  } else {
+    prevEntryBtn.classList.remove('hidden');
+  }
+
+  if (index === selectedFiles.length - 1) {
+    nextEntryBtn.classList.add('hidden');
+  } else {
+    nextEntryBtn.classList.remove('hidden');
+  }
+  
+  // 讓 ScrollArea 回到最上方，方便檢視
+  step2ScrollArea.scrollTop = 0;
 }
     fields.address.addEventListener('input', (e) => {
       if (e.target.value.trim() !== savedAddressForCurrentEntry.trim()) {
