@@ -564,7 +564,6 @@
     function openLightbox(src) { lightboxImg.src = src; lightbox.classList.add('active'); }
     lightboxClose.onclick = () => { lightbox.classList.remove('active'); };
 
-    // ── AI 辨識與多筆資料處理 ──────────────────────────────
     async function fetchN8nAI(base64Images) {
       const response = await fetch(
         'https://kh.oneplace.com.tw/webhook/5282a653-7c4c-4f4f-af7e-b9afe50cde0c',
@@ -578,20 +577,32 @@
       );
       if (!response.ok) throw new Error(`Webhook 回應錯誤：${response.status}`);
       const raw = await response.json();
-
       const rawArray = Array.isArray(raw) ? raw : [raw];
-      return rawArray.map(item => {
+
+      // ✅ 用 index 當 key，確保每筆對應正確圖片
+      const results = {};
+      rawArray.forEach(item => {
+        const idx = parseInt(item.index ?? 0);
         const amount = Number(item.order_amount) || 0;
         const tax = Math.round(amount * 5 / 105);
-        return {
+        results[idx] = {
           address: item.recipient_address || '',
-          projectId: item.projectId || '',  // 🌟 對應 n8n 的 projectId
+          projectId: (!item.projectId || item.projectId === '查詢失敗') ? '' : item.projectId,
           platform: item.platform || '',
           total: amount || '',
           tax: tax || '',
           memo: item.order_date ? `訂單日期：${item.order_date}` : ''
         };
       });
+
+      // ✅ 確保每個圖片索引都有預設空資料
+      base64Images.forEach((_, i) => {
+        if (!results[i]) {
+          results[i] = { address: '', projectId: '', platform: '', total: '', tax: '', memo: '' };
+        }
+      });
+
+      return results;
     }
 
     async function simulateRagicQuery(addressStr) {
