@@ -564,20 +564,38 @@
     function openLightbox(src) { lightboxImg.src = src; lightbox.classList.add('active'); }
     lightboxClose.onclick = () => { lightbox.classList.remove('active'); };
 
-    // ── AI 辨識模擬與多筆資料處理 ──────────────────────────────
+    // ── AI 辨識與多筆資料處理 ──────────────────────────────
     async function fetchN8nAI(base64Images) {
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          const mockResults = base64Images.map((_, index) => ({
-            address: `台中市西區中華路一段2號四樓`,
-            projectId: `268`,
-            platform: "MOMO",
-            total: 2244 + (index * 100),
-            tax: 107,
-            memo: `【澄品】塑鋼電器櫃 寬65x深43x高112 (圖 ${index + 1})`
-          }));
-          resolve(mockResults);
-        }, 1500);
+      const response = await fetch(
+        'https://kh.oneplace.com.tw/webhook/5282a653-7c4c-4f4f-af7e-b9afe50cde0c',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            images: base64Images.map((dataURL, index) => ({
+              index,
+              dataURL
+            }))
+          })
+        }
+      );
+      if (!response.ok) throw new Error(`Webhook 回應錯誤：${response.status}`);
+      const raw = await response.json();
+
+      // 將 n8n 回傳的欄位對應到 HTML 欄位
+      // 支援單筆物件或陣列（與上傳圖片數量相同）
+      const rawArray = Array.isArray(raw) ? raw : [raw];
+      return rawArray.map(item => {
+        const amount = Number(item.order_amount) || 0;
+        const tax = Math.round(amount * 5 / 105); // 內含稅5%
+        return {
+          address: item.recipient_address || '',
+          projectId: item.project_id || '',
+          platform: item.platform || '',
+          total: amount || '',
+          tax: tax || '',
+          memo: amount ? `訂單金額：${amount}` : ''
+        };
       });
     }
 
