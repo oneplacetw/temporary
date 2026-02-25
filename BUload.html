@@ -619,30 +619,34 @@
       aiResults[currentEditIndex].memo = fields.memo.value;
     }
 
-    function loadEntry(index) {
-      saveCurrentEntry();
-      currentEditIndex = index;
-      const data = aiResults[index];
-      const imgUrl = selectedFiles[index].dataURL;
+// 加入 skipSave 參數，預設為 false
+function loadEntry(index, skipSave = false) {
+  // 只有在非跳過狀態下，才把畫面內容存起來
+  if (!skipSave) {
+    saveCurrentEntry();
+  }
+  
+  currentEditIndex = index;
+  const data = aiResults[index];
+  const imgUrl = selectedFiles[index].dataURL;
 
-      step2Counter.textContent = `${index + 1} / ${selectedFiles.length}`;
-      step2MainThumb.src = imgUrl;
-      step2MainThumb.onclick = () => openLightbox(imgUrl);
+  step2Counter.textContent = `${index + 1} / ${selectedFiles.length}`;
+  step2MainThumb.src = imgUrl;
+  step2MainThumb.onclick = () => openLightbox(imgUrl);
 
-      savedAddressForCurrentEntry = data.address || '';
-      fields.address.value = savedAddressForCurrentEntry;
-      fields.projectId.value = data.projectId || '';
-      fields.platform.value = data.platform || '';
-      fields.total.value = data.total || '';
-      fields.tax.value = data.tax || '';
-      fields.memo.value = data.memo || '';
+  savedAddressForCurrentEntry = data.address || '';
+  fields.address.value = savedAddressForCurrentEntry;
+  fields.projectId.value = data.projectId || '';
+  fields.platform.value = data.platform || '';
+  fields.total.value = data.total || '';
+  fields.tax.value = data.tax || '';
+  fields.memo.value = data.memo || '';
 
-      updateIdBtn.disabled = true;
+  updateIdBtn.disabled = true;
 
-      prevEntryBtn.classList.toggle('hidden', index === 0);
-      nextEntryBtn.classList.toggle('hidden', index === selectedFiles.length - 1);
-    }
-
+  prevEntryBtn.classList.toggle('hidden', index === 0);
+  nextEntryBtn.classList.toggle('hidden', index === selectedFiles.length - 1);
+}
     fields.address.addEventListener('input', (e) => {
       if (e.target.value.trim() !== savedAddressForCurrentEntry.trim()) {
         updateIdBtn.disabled = false;
@@ -715,7 +719,7 @@
         const base64Images = selectedFiles.map(f => f.dataURL);
         aiResults = await fetchN8nAI(base64Images);
 
-        loadEntry(0);
+        loadEntry(0, true);
         step1Container.classList.add('hidden');
         step2Container.classList.remove('hidden');
         step2Container.classList.add('flex');
