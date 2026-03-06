@@ -18,7 +18,6 @@
       box-sizing: border-box;
     }
 
-    /* 滿版無邊界，使用 100dvh 確保動態視窗下不會被裁切 */
     body,
     html {
       margin: 0;
@@ -66,7 +65,6 @@
       animation: fadeIn 0.2s ease forwards;
     }
 
-    /* Lightbox */
     #lightbox {
       display: none;
       position: fixed;
@@ -105,7 +103,6 @@
       opacity: 1;
     }
 
-    /* Loading dots */
     @keyframes blink {
 
       0%,
@@ -132,7 +129,6 @@
       animation-delay: 0.4s;
     }
 
-    /* Preview slider */
     #previewArea {
       background-color: #333333;
       width: 100%;
@@ -232,9 +228,15 @@
       white-space: nowrap;
     }
 
-    /* 針對底部按鈕的安全距離設定 */
     .safe-pb {
       padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+    }
+
+    select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
     }
   </style>
 </head>
@@ -249,14 +251,13 @@
   <div
     class="bg-white w-full lg:max-w-md flex flex-col relative h-[100dvh] lg:h-screen lg:shadow-2xl lg:border-x lg:border-gray-300 overflow-hidden mx-auto">
 
+    <!-- Step 1 -->
     <div id="step1Container" class="flex flex-col h-full w-full overflow-hidden">
-
       <div
         class="bg-[#7C8A7B] text-white p-4 flex items-center justify-center relative font-medium shrink-0 shadow-sm z-10">
         <img src="https://r-forms.oneplace.com.tw/gray.png" alt="Logo" class="absolute left-4 h-6 object-contain">
         <span>信用卡快速申報</span>
       </div>
-
       <div id="previewArea" class="w-full hidden relative bg-[#333333] shrink min-h-[25vh] basis-[60vh]">
         <div id="sliderWrapper" class="w-full h-full relative">
           <div id="previewSlider"></div>
@@ -265,7 +266,6 @@
           <div id="posIndicator">1 / 1</div>
         </div>
       </div>
-
       <div class="grow shrink-0 flex flex-col justify-center items-center px-6 py-4 bg-white z-10">
         <div class="w-full">
           <label id="uploadLabel" class="block text-sm font-bold text-gray-700 mb-2 text-center">Upload images</label>
@@ -274,16 +274,14 @@
             <svg class="w-8 h-8 text-gray-400 mb-1" fill="currentColor" viewBox="0 0 20 20">
               <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
             </svg>
-            <p class="text-sm text-gray-500 text-center leading-tight">
-              Drag &amp; drop files or <span class="underline font-medium text-gray-700">browse</span>
-            </p>
+            <p class="text-sm text-gray-500 text-center leading-tight">Drag &amp; drop files or <span
+                class="underline font-medium text-gray-700">browse</span></p>
             <p class="text-[11px] text-gray-400 mt-1">最多 10 張・每張 5 MB 以內</p>
             <input type="file" id="fileInput" class="hidden" multiple accept="image/*" />
           </div>
           <p id="errorMsg" class="text-xs text-red-500 mt-1.5 hidden text-center"></p>
         </div>
       </div>
-
       <div
         class="px-5 pt-4 safe-pb bg-white border-t border-gray-100 shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-10">
         <button id="nextBtn"
@@ -294,39 +292,40 @@
       </div>
     </div>
 
+    <!-- Step 2 -->
     <div id="step2Container" class="hidden flex-col h-full w-full relative overflow-hidden">
-
       <div
         class="bg-[#7C8A7B] text-white p-4 flex items-center justify-center relative font-medium shrink-0 shadow-sm z-10">
         <img src="https://r-forms.oneplace.com.tw/gray.png" alt="Logo" class="absolute left-4 h-6 object-contain">
         <span>資料確認與補全</span>
       </div>
-
       <div id="prevEntryBtn"
-        class="absolute left-0 top-[110px] bg-gray-500 text-white px-1.5 py-4 rounded-r-md cursor-pointer transition-colors hover:bg-gray-600 flex flex-col items-center gap-1 text-sm font-medium z-10 hidden shadow-md">
-        <span>&lt;</span><span>上</span><span>一</span><span>筆</span>
+        class="absolute left-3 bg-black bg-opacity-50 text-white rounded-full w-10 h-10 flex items-center justify-center cursor-pointer hover:bg-opacity-75 transition-all z-10 hidden shadow-lg text-xl font-bold"
+        style="top: calc(56px + 60px + 140px);">
+        &#8249;
       </div>
       <div id="nextEntryBtn"
-        class="absolute right-0 top-[110px] bg-[#7f8c8d] text-white px-1.5 py-4 rounded-l-md cursor-pointer transition-colors hover:bg-gray-500 flex flex-col items-center gap-1 text-sm font-medium z-10 hidden shadow-md">
-        <span>&gt;</span><span>下</span><span>一</span><span>筆</span>
+        class="absolute right-3 bg-black bg-opacity-50 text-white rounded-full w-10 h-10 flex items-center justify-center cursor-pointer hover:bg-opacity-75 transition-all z-10 hidden shadow-lg text-xl font-bold"
+        style="top: calc(56px + 60px + 140px);">
+        &#8250;
       </div>
 
       <div id="step2ScrollArea" class="flex-1 overflow-y-auto p-6 space-y-5 min-h-0 bg-white">
-
-        <div class="flex flex-col items-start gap-3 border-b border-gray-100 pb-4 shrink-0">
-          <div id="step2-counter"
-            class="bg-gray-500 text-white px-3 py-1 rounded-full text-sm font-medium leading-none shadow-sm">
-            1/2
+        <div class="flex flex-col items-center gap-3 border-b border-gray-100 pb-4 shrink-0">
+          <div class="flex items-center gap-3">
+            <div id="step2-counter"
+              class="bg-gray-500 text-white px-3 py-1 rounded-full text-sm font-medium leading-none shadow-sm ">1/2</div>
+            <p class="text-sm font-medium text-gray-500">上傳的圖片 (點擊可放大)</p>
           </div>
           <img id="step2-main-thumb" src=""
-            class="h-24 w-24 object-cover rounded-md border border-gray-300 cursor-pointer transition-transform hover:scale-105 shadow-sm"
+            class="w-full object-contain rounded-md border border-gray-200 cursor-pointer shadow-sm bg-[#F9FAFB]"
+            style="max-height: 280px;"
             title="點擊放大">
-          <p class="text-xs font-medium text-gray-500">上傳的圖片 (點擊可放大)</p>
         </div>
 
         <div class="space-y-4 pb-4">
           <div>
-            <label class="block text-sm font-bold text-gray-800 mb-1">收件地址或案場簡稱</label>
+            <label class="block text-sm font-bold text-gray-800 mb-1">案場完整地址</label>
             <input type="text" id="ai-address"
               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:outline-none focus:border-transparent text-base font-medium"
               style="--tw-ring-color: #7C8A7B;">
@@ -335,22 +334,40 @@
           <div>
             <label class="block text-sm font-bold text-gray-800 mb-1">案場編號</label>
             <div class="flex gap-3">
-              <input type="text" id="ai-project-id"
-                class="flex-1 min-w-0 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:outline-none focus:border-transparent text-base"
-                style="--tw-ring-color: #7C8A7B;">
+              <div class="w-28 shrink-0 relative">
+                <input type="text" id="ai-project-id" readonly placeholder=""
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg text-base text-gray-600 cursor-not-allowed text-center font-bold"
+                  style="background-color: #E6E7EA; --tw-ring-color: #7C8A7B;">
+                <div id="project-id-spinner"
+                  class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-white font-bold tracking-widest">
+                  <span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>
+                </div>
+              </div>
               <button id="update-id-btn"
-                class="shrink-0 px-5 py-3 rounded-lg font-medium text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap shadow-sm"
-                style="background-color: #7C8A7B;" disabled>
-                更新編號
-              </button>
+                class="flex-1 text-center py-3 rounded-lg font-medium text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                style="background-color: #7C8A7B;" disabled>更新編號</button>
             </div>
           </div>
 
           <div>
-            <label class="block text-sm font-bold text-gray-800 mb-1">下單平台</label>
-            <input type="text" id="ai-platform"
+            <label class="block text-sm font-bold text-gray-800 mb-1">訂單編號</label>
+            <input type="text" id="ai-order-number"
               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:outline-none focus:border-transparent text-base"
               style="--tw-ring-color: #7C8A7B;">
+          </div>
+
+          <div>
+            <label class="block text-sm font-bold text-gray-800 mb-1">下單平台</label>
+            <select id="ai-platform"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:outline-none focus:border-transparent text-base bg-white"
+              style="--tw-ring-color: #7C8A7B;">
+              <option value="">請選擇</option>
+              <option value="MOMO">MOMO</option>
+              <option value="蝦皮">蝦皮</option>
+              <option value="IKEA">IKEA</option>
+              <option value="網路">網路</option>
+              <option value="其他">其他</option>
+            </select>
           </div>
 
           <div class="flex gap-4">
@@ -369,6 +386,33 @@
           </div>
 
           <div>
+            <label class="block text-sm font-bold text-gray-800 mb-1">支出分類</label>
+            <select id="ai-category"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:outline-none focus:border-transparent text-base bg-white"
+              style="--tw-ring-color: #7C8A7B;">
+              <option value="">請選擇</option>
+              <option value="前期工程">前期工程</option>
+              <option value="前期家具">前期家具</option>
+              <option value="前期家電">前期家電</option>
+              <option value="軟裝佈置">軟裝佈置</option>
+              <option value="油漆材料">油漆材料</option>
+              <option value="工具">工具</option>
+              <option value="水電材料">水電材料</option>
+              <option value="打鑰匙">打鑰匙</option>
+              <option value="服務性質">服務性質</option>
+              <option value="運輸(only物品)">運輸(only物品)</option>
+              <option value="打掃">打掃</option>
+              <option value="清運垃圾">清運垃圾</option>
+              <option value="管理費">管理費</option>
+              <option value="網路費">網路費</option>
+              <option value="修繕工程">修繕工程</option>
+              <option value="車資(人)">車資(人)</option>
+              <option value="餐飲">餐飲</option>
+              <option value="雜支">雜支</option>
+            </select>
+          </div>
+
+          <div>
             <label class="block text-sm font-bold text-gray-800 mb-1">備註</label>
             <textarea id="ai-memo" rows="2"
               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:outline-none focus:border-transparent resize-none text-base"
@@ -380,20 +424,25 @@
       <div
         class="px-5 pt-4 safe-pb bg-white border-t border-gray-100 mt-auto shrink-0 flex gap-3 justify-center z-20 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
         <button id="backBtn"
-          class="flex-1 bg-gray-200 text-gray-700 py-3.5 rounded-lg font-bold hover:bg-gray-300 transition-colors text-base">
-          返回重選
-        </button>
-        <button id="finalSubmitBtn" class="flex-1 text-white py-3.5 rounded-lg font-bold transition-colors text-base"
-          style="background-color: #7C8A7B;">
-          確認送出
-        </button>
+          class="flex-1 bg-gray-200 text-gray-700 py-3.5 rounded-lg font-bold hover:bg-gray-300 transition-colors text-base">返回重選</button>
+        <button id="finalSubmitBtn"
+          class="flex-1 text-white py-3.5 rounded-lg font-bold transition-colors text-base disabled:opacity-50"
+          style="background-color: #7C8A7B;">確認送出</button>
       </div>
-
     </div>
 
   </div>
 
   <script>
+    const N8N_WEBHOOK_BASE = 'https://kh.oneplace.com.tw/webhook';
+    const OCR_WEBHOOK_URL = `${N8N_WEBHOOK_BASE}/BUload01`;   // OCRpre
+    // ── [修改1] URL 換成 webhook-test/BUload05 ──
+    const SUBMIT_WEBHOOK_URL = 'https://kh.oneplace.com.tw/webhook-test/BUload05'; // submitRagic
+    const PROJECT_ID_WEBHOOK_URL = `${N8N_WEBHOOK_BASE}/6b8220a4-a225-4fc7-9c1e-5010b9b91427`; // 既有：BU案場更新按鈕
+
+    // ── LINE UID（LIFF 環境由 URL 帶入）──
+    const LINE_UID = new URLSearchParams(window.location.search).get('lineUid') || 'U2379b47c91266e6ceed48ca840b96d10';
+
     const dropzone = document.getElementById('dropzone');
     const fileInput = document.getElementById('fileInput');
     const previewArea = document.getElementById('previewArea');
@@ -403,30 +452,29 @@
     const errorMsg = document.getElementById('errorMsg');
     const uploadLabel = document.getElementById('uploadLabel');
     const nextBtn = document.getElementById('nextBtn');
-
     const lightbox = document.getElementById('lightbox');
     const lightboxImg = document.getElementById('lightboxImg');
     const lightboxClose = document.getElementById('lightboxClose');
-
     const step1Container = document.getElementById('step1Container');
     const step2Container = document.getElementById('step2Container');
-
     const step2Counter = document.getElementById('step2-counter');
     const step2MainThumb = document.getElementById('step2-main-thumb');
     const prevEntryBtn = document.getElementById('prevEntryBtn');
     const nextEntryBtn = document.getElementById('nextEntryBtn');
     const step2ScrollArea = document.getElementById('step2ScrollArea');
     const updateIdBtn = document.getElementById('update-id-btn');
-
+    const projectIdSpinner = document.getElementById('project-id-spinner');
     const backBtn = document.getElementById('backBtn');
     const finalSubmitBtn = document.getElementById('finalSubmitBtn');
 
     const fields = {
       address: document.getElementById('ai-address'),
       projectId: document.getElementById('ai-project-id'),
+      orderNumber: document.getElementById('ai-order-number'),
       platform: document.getElementById('ai-platform'),
       total: document.getElementById('ai-total'),
       tax: document.getElementById('ai-tax'),
+      category: document.getElementById('ai-category'),
       memo: document.getElementById('ai-memo')
     };
 
@@ -434,11 +482,11 @@
     const MAX_SIZE_MB = 5;
     let selectedFiles = [];
     let currentIndex = 0;
-    let aiResults = [];
+    let aiResults = {};
     let currentEditIndex = 0;
-    let savedAddressForCurrentEntry = "";
+    let savedAddressForCurrentEntry = '';
 
-    // ── Dropzone & Step 1 Logic ──────────────────────────────
+    // ── Dropzone & Step 1 ──────────────────────────────
     dropzone.addEventListener('click', () => fileInput.click());
     fileInput.addEventListener('change', e => { handleFiles(e.target.files); fileInput.value = ''; });
     dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag-over'); });
@@ -451,48 +499,31 @@
     document.getElementById('navPrev').addEventListener('click', () => goTo(currentIndex - 1));
     document.getElementById('navNext').addEventListener('click', () => goTo(currentIndex + 1));
 
-    // Step 1 預覽區手機左右滑動
-    let step1TouchStartX = 0;
-    let step1TouchStartY = 0;
-
-    sliderWrapper.addEventListener('touchstart', e => {
-      step1TouchStartX = e.changedTouches[0].clientX;
-      step1TouchStartY = e.changedTouches[0].clientY;
-    }, { passive: true });
-
+    let step1TouchStartX = 0, step1TouchStartY = 0;
+    sliderWrapper.addEventListener('touchstart', e => { step1TouchStartX = e.changedTouches[0].clientX; step1TouchStartY = e.changedTouches[0].clientY; }, { passive: true });
     sliderWrapper.addEventListener('touchend', e => {
       const dx = e.changedTouches[0].clientX - step1TouchStartX;
       const dy = e.changedTouches[0].clientY - step1TouchStartY;
-
       if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
-        if (dx < 0 && currentIndex < selectedFiles.length - 1) {
-          goTo(currentIndex + 1);
-        } else if (dx > 0 && currentIndex > 0) {
-          goTo(currentIndex - 1);
-        }
+        if (dx < 0 && currentIndex < selectedFiles.length - 1) goTo(currentIndex + 1);
+        else if (dx > 0 && currentIndex > 0) goTo(currentIndex - 1);
       }
     }, { passive: true });
 
     function handleFiles(files) {
       const incoming = Array.from(files).filter(f => f.type.startsWith('image/'));
       if (!incoming.length) return;
-
       const valid = [];
       for (const f of incoming) {
         if (selectedFiles.length + valid.length >= MAX_COUNT) break;
         if (f.size <= MAX_SIZE_MB * 1024 * 1024) valid.push(f);
       }
-
       valid.forEach(file => {
         const idx = selectedFiles.length;
         selectedFiles.push({ file, dataURL: null });
         addSlide(idx, null);
         const reader = new FileReader();
-        reader.onload = e => {
-          selectedFiles[idx].dataURL = e.target.result;
-          updateSlideImage(idx, e.target.result);
-          updateUI();
-        };
+        reader.onload = e => { selectedFiles[idx].dataURL = e.target.result; updateSlideImage(idx, e.target.result); updateUI(); };
         reader.readAsDataURL(file);
       });
       currentIndex = selectedFiles.length - valid.length;
@@ -501,141 +532,142 @@
 
     function addSlide(idx, dataURL) {
       const slide = document.createElement('div');
-      slide.className = 'slide-item';
-      slide.dataset.idx = idx;
+      slide.className = 'slide-item'; slide.dataset.idx = idx;
       slide.innerHTML = dataURL ? slideHTML(idx, dataURL) : `<div class="skeleton rounded-md" style="width:80%;height:80%;"></div>`;
       if (dataURL) bindSlideEvents(slide);
       previewSlider.appendChild(slide);
     }
-
     function slideHTML(idx, dataURL) {
       return `<img src="${dataURL}" class="img-fade cursor-pointer" draggable="false" style="max-width:100%;max-height:100%;object-fit:contain;display:block;"><button class="slide-delete-btn" data-idx="${idx}">&#x2715;</button>`;
     }
-
     function bindSlideEvents(slide) {
       slide.querySelector('img').onclick = () => openLightbox(slide.querySelector('img').src);
       slide.querySelector('.slide-delete-btn').onclick = e => { e.stopPropagation(); removeImage(parseInt(e.currentTarget.dataset.idx)); };
     }
-
     function updateSlideImage(idx, dataURL) {
       const slide = previewSlider.querySelector(`.slide-item[data-idx="${idx}"]`);
       if (slide) { slide.innerHTML = slideHTML(idx, dataURL); bindSlideEvents(slide); }
     }
-
     function removeImage(idx) {
       selectedFiles.splice(idx, 1);
       currentIndex = Math.max(0, Math.min(selectedFiles.length - 1, currentIndex));
       rebuildSlider();
     }
-
     function rebuildSlider() {
       previewSlider.innerHTML = '';
-      if (!selectedFiles.length) {
-        updateUI();
-        return;
-      }
+      if (!selectedFiles.length) { updateUI(); return; }
       selectedFiles.forEach((item, i) => addSlide(i, item.dataURL));
       updateUI();
     }
-
     function goTo(idx) {
       if (!selectedFiles.length) return;
       currentIndex = Math.max(0, Math.min(selectedFiles.length - 1, idx));
       updateUI();
     }
-
     function updateUI() {
       if (selectedFiles.length > 0) {
         previewArea.classList.remove('hidden');
-        uploadLabel.textContent = "繼續上傳圖片";
+        uploadLabel.textContent = '繼續上傳圖片';
         uploadLabel.classList.remove('text-center');
       } else {
         previewArea.classList.add('hidden');
-        uploadLabel.textContent = "Upload images";
+        uploadLabel.textContent = 'Upload images';
         uploadLabel.classList.add('text-center');
       }
-
       previewSlider.style.transform = `translateX(-${currentIndex * 100}%)`;
       posIndicator.textContent = selectedFiles.length ? `${currentIndex + 1} / ${selectedFiles.length}` : '0 / 0';
       document.getElementById('navPrev').style.display = selectedFiles.length > 1 && currentIndex > 0 ? '' : 'none';
       document.getElementById('navNext').style.display = selectedFiles.length > 1 && currentIndex < selectedFiles.length - 1 ? '' : 'none';
     }
-
     function openLightbox(src) { lightboxImg.src = src; lightbox.classList.add('active'); }
-    lightboxClose.onclick = () => { lightbox.classList.remove('active'); };
+    lightboxClose.onclick = () => lightbox.classList.remove('active');
 
+    // ── AI 辨識（OCRpre / BUload01）─────────────────────────────
     async function fetchN8nAI(base64Images) {
-      const response = await fetch(
-        'https://kh.oneplace.com.tw/webhook/5282a653-7c4c-4f4f-af7e-b9afe50cde0c',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            images: base64Images.map((dataURL, index) => ({ index, dataURL }))
-          })
-        }
-      );
-      if (!response.ok) throw new Error(`Webhook 回應錯誤：${response.status}`);
-      const raw = await response.json();
+      const response = await fetch(OCR_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ images: base64Images.map((dataURL, index) => ({ index, dataURL })) })
+      });
+      if (!response.ok) throw new Error(`OCR Webhook 回應錯誤：${response.status}`);
+
+      let raw = await response.json();
+      if (typeof raw === 'string') {
+        try { raw = JSON.parse(raw); } catch { raw = []; }
+      }
       const rawArray = Array.isArray(raw) ? raw : [raw];
 
-      // ✅ 用 index 當 key，確保每筆對應正確圖片
       const results = {};
       rawArray.forEach(item => {
         const idx = parseInt(item.index ?? 0);
         const amount = Number(item.order_amount) || 0;
         const tax = Math.round(amount * 5 / 105);
+
         results[idx] = {
           address: item.recipient_address || '',
-          projectId: (!item.projectId || item.projectId === '查詢失敗') ? '' : item.projectId,
-          platform: item.platform || '',
+          projectId: '',
+          orderNumber: item.order_number || item.orderNumber || '',
+          platform: '',
           total: amount || '',
           tax: tax || '',
-          memo: item.order_date ? `訂單日期：${item.order_date}` : ''
+          category: '',
+          memo: item.order_date ? `訂單日期：${item.order_date}` : '',
+          orderDate: item.order_date || '',
+          dataURL: base64Images[idx] || ''
         };
       });
 
-      // ✅ 確保每個圖片索引都有預設空資料
-      base64Images.forEach((_, i) => {
+      base64Images.forEach((dataURL, i) => {
         if (!results[i]) {
-          results[i] = { address: '', projectId: '', platform: '', total: '', tax: '', memo: '' };
+          results[i] = { address: '', projectId: '', orderNumber: '', platform: '', total: '', tax: '', category: '', memo: '', orderDate: '', dataURL };
         }
       });
 
       return results;
     }
 
-    async function simulateRagicQuery(addressStr) {
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          if (addressStr.includes('台中')) resolve('268');
-          else if (addressStr.includes('內湖') || addressStr.includes('台北')) resolve('312');
-          else resolve('999');
-        }, 800);
-      });
+    // ── 自動查詢案場編號（既有 BU案場更新按鈕）─────────────────────────────
+    async function autoFetchProjectId(index, address) {
+      if (!address) return;
+      projectIdSpinner.classList.remove('hidden');
+      fields.projectId.value = '';
+      updateIdBtn.disabled = true;
+      try {
+        const response = await fetch(PROJECT_ID_WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ address })
+        });
+        const data = await response.json();
+        const newProjectId = data.projectId ?? '';
+        fields.projectId.value = newProjectId;
+        aiResults[index].projectId = newProjectId;
+        savedAddressForCurrentEntry = address;
+      } catch (e) {
+        fields.projectId.value = '';
+      } finally {
+        projectIdSpinner.classList.add('hidden');
+        updateIdBtn.disabled = true;
+      }
     }
 
+    // ── Step 2 資料存取 ──────────────────────────────
     function saveCurrentEntry() {
-      if (!aiResults[currentEditIndex]) return;
+      if (aiResults[currentEditIndex] === undefined) return;
       aiResults[currentEditIndex].address = fields.address.value;
       aiResults[currentEditIndex].projectId = fields.projectId.value;
+      aiResults[currentEditIndex].orderNumber = fields.orderNumber.value;
       aiResults[currentEditIndex].platform = fields.platform.value;
       aiResults[currentEditIndex].total = fields.total.value;
       aiResults[currentEditIndex].tax = fields.tax.value;
+      aiResults[currentEditIndex].category = fields.category.value;
       aiResults[currentEditIndex].memo = fields.memo.value;
     }
 
-    // 加入 skipSave 參數，預設為 false
     function loadEntry(index, skipSave = false) {
-      // 1. 先確認索引有效性
       if (index < 0 || index >= selectedFiles.length) return;
+      if (!skipSave) saveCurrentEntry();
 
-      // 2. 只有在非初始載入時，才儲存上一筆編輯中的資料
-      if (!skipSave) {
-        saveCurrentEntry();
-      }
-
-      // 3. 更新全域編輯索引
       currentEditIndex = index;
       const data = aiResults[index] || {};
       const imgUrl = selectedFiles[index].dataURL;
@@ -647,58 +679,45 @@
       savedAddressForCurrentEntry = data.address || '';
       fields.address.value = savedAddressForCurrentEntry;
       fields.projectId.value = data.projectId || '';
+      fields.orderNumber.value = data.orderNumber || '';
       fields.platform.value = data.platform || '';
       fields.total.value = data.total || '';
       fields.tax.value = data.tax || '';
+      fields.category.value = data.category || '';
       fields.memo.value = data.memo || '';
 
       updateIdBtn.disabled = true;
-
-      if (index === 0) {
-        prevEntryBtn.classList.add('hidden');
-      } else {
-        prevEntryBtn.classList.remove('hidden');
-      }
-
-      if (index === selectedFiles.length - 1) {
-        nextEntryBtn.classList.add('hidden');
-      } else {
-        nextEntryBtn.classList.remove('hidden');
-      }
-
-      // 讓 ScrollArea 回到最上方，方便檢視
+      prevEntryBtn.classList.toggle('hidden', index === 0);
+      nextEntryBtn.classList.toggle('hidden', index === selectedFiles.length - 1);
       step2ScrollArea.scrollTop = 0;
-    }
-    fields.address.addEventListener('input', (e) => {
-      if (e.target.value.trim() !== savedAddressForCurrentEntry.trim()) {
-        updateIdBtn.disabled = false;
-      } else {
-        updateIdBtn.disabled = true;
+
+      if (savedAddressForCurrentEntry && !data.projectId) {
+        autoFetchProjectId(index, savedAddressForCurrentEntry);
       }
+    }
+
+    fields.address.addEventListener('input', (e) => {
+      updateIdBtn.disabled = (e.target.value.trim() === savedAddressForCurrentEntry.trim());
     });
 
     updateIdBtn.addEventListener('click', async () => {
       const newAddress = fields.address.value;
       updateIdBtn.disabled = true;
       updateIdBtn.innerHTML = '<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>';
-
       try {
-        // 發送地址到 webhook，等待 n8n Respond to Webhook 回傳 projectId
-        const response = await fetch('https://kh.oneplace.com.tw/webhook/6b8220a4-a225-4fc7-9c1e-5010b9b91427', {
+        const response = await fetch(PROJECT_ID_WEBHOOK_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ address: newAddress })
         });
         const data = await response.json();
         const newProjectId = data.projectId ?? '';
-        if (!newProjectId) console.warn('Webhook 未回傳 projectId，請確認 n8n 流程');
         fields.projectId.value = newProjectId;
         aiResults[currentEditIndex].projectId = newProjectId;
         savedAddressForCurrentEntry = newAddress;
         saveCurrentEntry();
       } finally {
         updateIdBtn.innerHTML = '更新編號';
-        // 額外確保按鈕狀態正確（地址若相同則禁用，不同則啟用）
         updateIdBtn.disabled = (fields.address.value.trim() === savedAddressForCurrentEntry.trim());
       }
     });
@@ -706,48 +725,35 @@
     prevEntryBtn.onclick = () => { if (currentEditIndex > 0) loadEntry(currentEditIndex - 1); };
     nextEntryBtn.onclick = () => { if (currentEditIndex < selectedFiles.length - 1) loadEntry(currentEditIndex + 1); };
 
-    // Step 2 手勢滑動切換
-    let step2TouchStartX = 0;
-    let step2TouchStartY = 0;
-
-    step2ScrollArea.addEventListener('touchstart', e => {
-      step2TouchStartX = e.changedTouches[0].clientX;
-      step2TouchStartY = e.changedTouches[0].clientY;
-    }, { passive: true });
-
+    let step2TouchStartX = 0, step2TouchStartY = 0;
+    step2ScrollArea.addEventListener('touchstart', e => { step2TouchStartX = e.changedTouches[0].clientX; step2TouchStartY = e.changedTouches[0].clientY; }, { passive: true });
     step2ScrollArea.addEventListener('touchend', e => {
       const dx = e.changedTouches[0].clientX - step2TouchStartX;
       const dy = e.changedTouches[0].clientY - step2TouchStartY;
-
       if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
-        if (dx < 0 && currentEditIndex < selectedFiles.length - 1) {
-          loadEntry(currentEditIndex + 1);
-        } else if (dx > 0 && currentEditIndex > 0) {
-          loadEntry(currentEditIndex - 1);
-        }
+        if (dx < 0 && currentEditIndex < selectedFiles.length - 1) loadEntry(currentEditIndex + 1);
+        else if (dx > 0 && currentEditIndex > 0) loadEntry(currentEditIndex - 1);
       }
     }, { passive: true });
 
-    // --- 觸發辨識 ---
     nextBtn.addEventListener('click', async () => {
       if (!selectedFiles.length) {
-        errorMsg.textContent = "請先上傳至少一張圖片！";
+        errorMsg.textContent = '請先上傳至少一張圖片！';
         errorMsg.classList.remove('hidden');
         setTimeout(() => errorMsg.classList.add('hidden'), 3000);
         return;
       }
-
       nextBtn.disabled = true;
       nextBtn.innerHTML = `AI 辨識中<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>`;
-
       try {
         const base64Images = selectedFiles.map(f => f.dataURL);
         aiResults = await fetchN8nAI(base64Images);
-
         loadEntry(0, true);
         step1Container.classList.add('hidden');
         step2Container.classList.remove('hidden');
         step2Container.classList.add('flex');
+      } catch (e) {
+        alert('AI 辨識失敗：' + (e?.message || e));
       } finally {
         nextBtn.innerHTML = '進行 AI 辨識';
         nextBtn.disabled = false;
@@ -760,12 +766,72 @@
       step1Container.classList.remove('hidden');
     };
 
-    finalSubmitBtn.onclick = () => {
+    // ── 確認送出：每筆各自帶 projectId → submitRagic（BUload05）─────────────────────────────
+    finalSubmitBtn.addEventListener('click', async () => {
       saveCurrentEntry();
-      console.log("準備送出的多筆資料:", aiResults);
-      alert(`資料已成功送出！共處理了 ${aiResults.length} 筆單據。`);
-      location.reload();
-    };
+
+      if (!LINE_UID) {
+        alert('缺少 lineUid（請從 LIFF 或 URL 帶入 ?lineUid=...）');
+        return;
+      }
+
+      const allEntries = Object.values(aiResults);
+      const missingProject = allEntries.find(x => !String(x.projectId || '').trim());
+      if (missingProject) {
+        alert('有資料尚未填入案場編號（projectId），請先補齊或按「更新編號」查詢後再送出。');
+        return;
+      }
+
+      // ── [修改3] 生成 submitId：SUB-{timestamp13}-{4碼隨機英數} ──
+      const submitId = 'SUB-' + Date.now() + '-' + Math.random().toString(36).toUpperCase().slice(2, 6);
+
+      // ── [修改2] 每筆資料各自帶 projectId，flat array，不做 groupBy ──
+      const payload = {
+        lineUid: LINE_UID,
+        submitId,
+        entries: allEntries.map(entry => ({
+          projectId:   entry.projectId   || '',
+          orderDate:   entry.orderDate   || '',
+          orderNumber: entry.orderNumber || '',
+          platform:    entry.platform    || '',
+          total:       entry.total       || '',
+          tax:         entry.tax         || '',
+          category:    entry.category    || '',
+          memo:        entry.memo        || '',
+          dataURL:     entry.dataURL     || ''
+        }))
+      };
+
+      finalSubmitBtn.disabled = true;
+      finalSubmitBtn.innerHTML = `送出中<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>`;
+
+      try {
+        const response = await fetch(SUBMIT_WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!response.ok) throw new Error(`送出失敗：${response.status}`);
+
+        let data = await response.json();
+        if (typeof data === 'string') {
+          try { data = JSON.parse(data); } catch { /* ignore */ }
+        }
+
+        if (data?.success === false) {
+          alert('送出失敗（n8n 回傳失敗）');
+          return;
+        }
+
+        alert(`已成功送出！共建立 ${payload.entries.length} 筆記錄。`);
+        location.reload();
+      } catch (e) {
+        alert('送出失敗：' + (e?.message || e));
+      } finally {
+        finalSubmitBtn.disabled = false;
+        finalSubmitBtn.innerHTML = '確認送出';
+      }
+    });
 
     updateUI();
   </script>
