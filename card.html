@@ -593,87 +593,156 @@
       document.getElementById('navPrev').style.display = selectedFiles.length > 1 && currentIndex > 0 ? '' : 'none';
       document.getElementById('navNext').style.display = selectedFiles.length > 1 && currentIndex < selectedFiles.length - 1 ? '' : 'none';
     }
-// ── Lightbox (預覽圖) 雙指放大與下滑關閉邏輯 ──
+
+    // ── 終極版 Lightbox (雙指定點縮放 + 單指拖曳 + 下滑關閉) ──
     let lbScale = 1;
-    let lbStartDist = 0;
+    let lbTranslateX = 0;
+    let lbTranslateY = 0;
+
     let lbInitScale = 1;
-    let lbStartY = 0;
-    let lbCurrentY = 0;
-    let lbIsSwiping = false;
+    let lbInitTranslateX = 0;
+    let lbInitTranslateY = 0;
+
+    let lbInitPinchDist = 0;
+    let lbInitPinchCenter = { x: 0, y: 0 };
+
+    let lbIsSwipingDown = false;
+    let lbSwipeStartY = 0;
+
+    let lbIsDragging = false;
+    let lbDragStartX = 0;
+    let lbDragStartY = 0;
 
     function openLightbox(src) {
       lightboxImg.src = src;
       lightbox.classList.add('active');
-      // 每次打開時，重置所有狀態與位置
+      // 每次打開時重置所有矩陣狀態
       lbScale = 1;
-      lbCurrentY = 0;
-      lightboxImg.style.transform = `translateY(0px) scale(1)`;
+      lbTranslateX = 0;
+      lbTranslateY = 0;
+      updateLightboxTransform();
       lightbox.style.backgroundColor = `rgba(0, 0, 0, 0.85)`;
     }
 
-    // 點擊 X 依然可以關閉
+    // 統一處理圖片變形
+    function updateLightboxTransform() {
+      lightboxImg.style.transform = `translate(${lbTranslateX}px, ${lbTranslateY}px) scale(${lbScale})`;
+    }
+
+    // 數學公式：計算兩點之間的距離
+    function getDistance(touches) {
+      return Math.hypot(touches[0].clientX - touches[1].clientX, touches[0].clientY - touches[1].clientY);
+    }
+
+    // 數學公式：計算兩點的中心座標 (這是定點放大的關鍵)
+    function getCenter(touches) {
+      return {
+        x: (touches[0].clientX + touches[1].clientX) / 2,
+        y: (touches[0].clientY + touches[1].clientY) / 2
+      };
+    }
+
+    // 點擊右上角 X 依然可以關閉
     lightboxClose.onclick = () => lightbox.classList.remove('active');
 
-    // 1. 監聽手指放上螢幕 (touchstart)
+    // 1. 觸控開始 (touchstart)
     lightbox.addEventListener('touchstart', (e) => {
-      if (e.touches.length === 2) {
-        // 雙指：記錄初始距離，準備縮放
-        lbStartDist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
-        lbInitScale = lbScale;
-        lbIsSwiping = false;
-      } else if (e.touches.length === 1) {
-        // 單指：記錄初始 Y 座標，準備下滑
-        lbStartY = e.touches[0].pageY;
-        lbCurrentY = 0;
-        // 只有在「沒有放大」的情況下，才允許下滑關閉 (避免放大觀看時誤觸)
-        lbIsSwiping = lbScale <= 1.05;
-      }
-      lightboxImg.style.transition = 'none'; // 移除動畫，讓圖片即時跟隨手指
+      lightboxImg.style.transition = 'none'; // 移除動畫，讓圖片黏著手指
       lightbox.style.transition = 'none';
-    }, { passive: false });
 
-    // 2. 監聽手指滑動 (touchmove)
-    lightbox.addEventListener('touchmove', (e) => {
-      e.preventDefault(); // 【關鍵】防止手機瀏覽器觸發下拉更新或背景滾動
-      
       if (e.touches.length === 2) {
-        // 雙指縮放中
-        const dist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
-        lbScale = lbInitScale * (dist / lbStartDist);
-        lbScale = Math.max(1, Math.min(lbScale, 4)); // 限制放大倍率：最大 4 倍，最小 1 倍
-        lightboxImg.style.transform = `translateY(0px) scale(${lbScale})`;
-      } else if (e.touches.length === 1 && lbIsSwiping) {
-        // 單指下滑中
-        lbCurrentY = Math.max(0, e.touches[0].pageY - lbStartY); // Math.max(0, ...) 確保只能「往下滑」不能往上
-        lightboxImg.style.transform = `translateY(${lbCurrentY}px) scale(${lbScale})`;
-        
-        // 巧思：背景黑底跟著下滑距離慢慢變透明
-        const opacity = Math.max(0, 0.85 - (lbCurrentY / (window.innerHeight * 0.8)));
-        lightbox.style.backgroundColor = `rgba(0, 0, 0, ${opacity})`;
+        // 雙指：記錄初始距離與中心點，準備縮放
+        lbIsSwipingDown = false;
+        lbIsDragging = false;
+        lbInitPinchDist = getDistance(e.touches);
+        lbInitPinchCenter = getCenter(e.touches);
+        lbInitScale = lbScale;
+        lbInitTranslateX = lbTranslateX;
+        lbInitTranslateY = lbTranslateY;
+      } else if (e.touches.length === 1) {
+        if (lbScale > 1) {
+          // 單指且圖片已放大：準備「拖曳」看角落細節
+          lbIsDragging = true;
+          lbDragStartX = e.touches[0].clientX - lbTranslateX;
+          lbDragStartY = e.touches[0].clientY - lbTranslateY;
+        } else {
+          // 單指且圖片未放大：準備「下滑關閉」
+          lbIsSwipingDown = true;
+          lbSwipeStartY = e.touches[0].clientY;
+        }
       }
     }, { passive: false });
 
-    // 3. 監聽手指離開螢幕 (touchend)
-    lightbox.addEventListener('touchend', (e) => {
-      if (e.touches.length < 2) {
-        lbInitScale = lbScale; // 儲存最後的放大倍率
-      }
+    // 2. 觸控移動 (touchmove)
+    lightbox.addEventListener('touchmove', (e) => {
+      e.preventDefault(); // 阻斷瀏覽器原生的滑動行為
 
+      if (e.touches.length === 2) {
+        // --- 雙指縮放與跟隨 ---
+        const currentDist = getDistance(e.touches);
+        const currentCenter = getCenter(e.touches);
+
+        // 計算縮放比例 (限制 1 倍到 5 倍)
+        lbScale = lbInitScale * (currentDist / lbInitPinchDist);
+        lbScale = Math.max(1, Math.min(lbScale, 5));
+
+        // 【最難的數學邏輯】：計算偏移量，讓圖片在放大的同時，中心點跟著手指移動
+        const scaleRatio = lbScale / lbInitScale;
+        lbTranslateX = currentCenter.x - (lbInitPinchCenter.x - lbInitTranslateX) * scaleRatio;
+        lbTranslateY = currentCenter.y - (lbInitPinchCenter.y - lbInitTranslateY) * scaleRatio;
+
+        updateLightboxTransform();
+
+      } else if (e.touches.length === 1) {
+        // --- 單指操作 ---
+        if (lbIsDragging && lbScale > 1) {
+          // 單指拖曳：移動圖片看局部細節
+          lbTranslateX = e.touches[0].clientX - lbDragStartX;
+          lbTranslateY = e.touches[0].clientY - lbDragStartY;
+          updateLightboxTransform();
+        } else if (lbIsSwipingDown && lbScale === 1) {
+          // 單指下滑關閉
+          const deltaY = Math.max(0, e.touches[0].clientY - lbSwipeStartY);
+          lbTranslateY = deltaY;
+          updateLightboxTransform();
+          
+          // 背景黑底漸層消失
+          const opacity = Math.max(0, 0.85 - (deltaY / (window.innerHeight * 0.8)));
+          lightbox.style.backgroundColor = `rgba(0, 0, 0, ${opacity})`;
+        }
+      }
+    }, { passive: false });
+
+    // 3. 觸控結束 (touchend)
+    lightbox.addEventListener('touchend', (e) => {
       if (e.touches.length === 0) {
-        // 手指全部離開，加上動畫準備歸位或關閉
+        // 手指全部離開：加上動畫，準備復原或關閉
         lightboxImg.style.transition = 'transform 0.25s ease-out';
         lightbox.style.transition = 'background-color 0.25s ease-out';
 
-        if (lbIsSwiping && lbCurrentY > 100) {
-          // 下滑距離超過 100px -> 觸發關閉
+        if (lbIsSwipingDown && lbTranslateY > 100) {
+          // 下滑夠深：觸發關閉
           lightbox.classList.remove('active');
         } else {
-          // 距離不足 -> 圖片彈回原位
-          lightboxImg.style.transform = `translateY(0px) scale(${lbScale})`;
+          // 回正邏輯：如果縮放比例小於等於 1，強制彈回正中央
+          if (lbScale <= 1) {
+            lbScale = 1;
+            lbTranslateX = 0;
+            lbTranslateY = 0;
+          }
+          updateLightboxTransform();
           lightbox.style.backgroundColor = `rgba(0, 0, 0, 0.85)`;
         }
-        lbIsSwiping = false;
-        lbCurrentY = 0;
+
+        lbIsSwipingDown = false;
+        lbIsDragging = false;
+      } else if (e.touches.length === 1) {
+        // 【無縫接軌】：如果本來是雙指放大，放開一根手指後，立刻將剩餘的那根手指轉為「拖曳模式」
+        if (lbScale > 1) {
+          lbIsDragging = true;
+          lbDragStartX = e.touches[0].clientX - lbTranslateX;
+          lbDragStartY = e.touches[0].clientY - lbTranslateY;
+        }
       }
     });
 
