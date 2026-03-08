@@ -593,8 +593,89 @@
       document.getElementById('navPrev').style.display = selectedFiles.length > 1 && currentIndex > 0 ? '' : 'none';
       document.getElementById('navNext').style.display = selectedFiles.length > 1 && currentIndex < selectedFiles.length - 1 ? '' : 'none';
     }
-    function openLightbox(src) { lightboxImg.src = src; lightbox.classList.add('active'); }
+// ── Lightbox (預覽圖) 雙指放大與下滑關閉邏輯 ──
+    let lbScale = 1;
+    let lbStartDist = 0;
+    let lbInitScale = 1;
+    let lbStartY = 0;
+    let lbCurrentY = 0;
+    let lbIsSwiping = false;
+
+    function openLightbox(src) {
+      lightboxImg.src = src;
+      lightbox.classList.add('active');
+      // 每次打開時，重置所有狀態與位置
+      lbScale = 1;
+      lbCurrentY = 0;
+      lightboxImg.style.transform = `translateY(0px) scale(1)`;
+      lightbox.style.backgroundColor = `rgba(0, 0, 0, 0.85)`;
+    }
+
+    // 點擊 X 依然可以關閉
     lightboxClose.onclick = () => lightbox.classList.remove('active');
+
+    // 1. 監聽手指放上螢幕 (touchstart)
+    lightbox.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 2) {
+        // 雙指：記錄初始距離，準備縮放
+        lbStartDist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
+        lbInitScale = lbScale;
+        lbIsSwiping = false;
+      } else if (e.touches.length === 1) {
+        // 單指：記錄初始 Y 座標，準備下滑
+        lbStartY = e.touches[0].pageY;
+        lbCurrentY = 0;
+        // 只有在「沒有放大」的情況下，才允許下滑關閉 (避免放大觀看時誤觸)
+        lbIsSwiping = lbScale <= 1.05;
+      }
+      lightboxImg.style.transition = 'none'; // 移除動畫，讓圖片即時跟隨手指
+      lightbox.style.transition = 'none';
+    }, { passive: false });
+
+    // 2. 監聽手指滑動 (touchmove)
+    lightbox.addEventListener('touchmove', (e) => {
+      e.preventDefault(); // 【關鍵】防止手機瀏覽器觸發下拉更新或背景滾動
+      
+      if (e.touches.length === 2) {
+        // 雙指縮放中
+        const dist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
+        lbScale = lbInitScale * (dist / lbStartDist);
+        lbScale = Math.max(1, Math.min(lbScale, 4)); // 限制放大倍率：最大 4 倍，最小 1 倍
+        lightboxImg.style.transform = `translateY(0px) scale(${lbScale})`;
+      } else if (e.touches.length === 1 && lbIsSwiping) {
+        // 單指下滑中
+        lbCurrentY = Math.max(0, e.touches[0].pageY - lbStartY); // Math.max(0, ...) 確保只能「往下滑」不能往上
+        lightboxImg.style.transform = `translateY(${lbCurrentY}px) scale(${lbScale})`;
+        
+        // 巧思：背景黑底跟著下滑距離慢慢變透明
+        const opacity = Math.max(0, 0.85 - (lbCurrentY / (window.innerHeight * 0.8)));
+        lightbox.style.backgroundColor = `rgba(0, 0, 0, ${opacity})`;
+      }
+    }, { passive: false });
+
+    // 3. 監聽手指離開螢幕 (touchend)
+    lightbox.addEventListener('touchend', (e) => {
+      if (e.touches.length < 2) {
+        lbInitScale = lbScale; // 儲存最後的放大倍率
+      }
+
+      if (e.touches.length === 0) {
+        // 手指全部離開，加上動畫準備歸位或關閉
+        lightboxImg.style.transition = 'transform 0.25s ease-out';
+        lightbox.style.transition = 'background-color 0.25s ease-out';
+
+        if (lbIsSwiping && lbCurrentY > 100) {
+          // 下滑距離超過 100px -> 觸發關閉
+          lightbox.classList.remove('active');
+        } else {
+          // 距離不足 -> 圖片彈回原位
+          lightboxImg.style.transform = `translateY(0px) scale(${lbScale})`;
+          lightbox.style.backgroundColor = `rgba(0, 0, 0, 0.85)`;
+        }
+        lbIsSwiping = false;
+        lbCurrentY = 0;
+      }
+    });
 
     // ── AI 辨識（OCRpre / BUload01）─────────────────────────────
     async function fetchN8nAI(base64Images) {
