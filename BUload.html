@@ -89,18 +89,32 @@
 
     #lightboxClose {
       position: absolute;
-      top: 20px;
-      right: 24px;
+      /* 使用 max 確保在有瀏海的手機上不會被遮擋，沒瀏海則維持 20px */
+      top: max(20px, env(safe-area-inset-top));
+      right: 20px;
       color: #fff;
-      font-size: 32px;
+      font-size: 28px;
       cursor: pointer;
       line-height: 1;
-      opacity: 0.7;
-      transition: opacity 0.15s;
+      
+      /* --- 新增：半透明圓形底色，防止白底圖片吃掉白字 --- */
+      background-color: rgba(0, 0, 0, 0.5);
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      z-index: 10001; /* 確保在圖片之上 */
+      /* --------------------------------------------------- */
+      
+      opacity: 0.85;
+      transition: opacity 0.15s, background-color 0.15s;
     }
 
     #lightboxClose:hover {
       opacity: 1;
+      background-color: rgba(0, 0, 0, 0.8);
     }
 
     @keyframes blink {
@@ -318,7 +332,7 @@
             <p class="text-sm font-medium text-gray-500">上傳的圖片 (點擊可放大)</p>
           </div>
           <img id="step2-main-thumb" src=""
-            class="w-full object-contain rounded-md border border-gray-200 cursor-pointer shadow-sm bg-[#F9FAFB]"
+            class="w-full object-contain rounded-md border border-gray-200 cursor-pointer shadow-sm bg-[#E6E7EA]"
             style="max-height: 280px;"
             title="點擊放大">
         </div>
@@ -336,8 +350,8 @@
             <div class="flex gap-3">
               <div class="w-28 shrink-0 relative">
                 <input type="text" id="ai-project-id" readonly placeholder=""
-                  class="w-full px-4 py-3 border border-gray-300 rounded-lg text-base text-gray-600 cursor-not-allowed text-center font-bold"
-                  style="background-color: #E6E7EA; --tw-ring-color: #7C8A7B;">
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:outline-none focus:border-transparent text-base text-gray-600 cursor-not-allowed text-center font-bold"
+                  style="background-color: #F9FAFB; --tw-ring-color: #7C8A7B;">
                 <div id="project-id-spinner"
                   class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-white font-bold tracking-widest">
                   <span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>
@@ -435,7 +449,7 @@
 
   <script>
     const N8N_WEBHOOK_BASE = 'https://kh.oneplace.com.tw/webhook';
-    const OCR_WEBHOOK_URL = `${N8N_WEBHOOK_BASE}/BUload01`;   // OCRpre
+    const OCR_WEBHOOK_URL = `${N8N_WEBHOOK_BASE}/BUload1.10`;   // OCRpre
     // ── [修改1] URL 換成 webhook-test/BUload05 ──
     const SUBMIT_WEBHOOK_URL = `${N8N_WEBHOOK_BASE}/BUload05`; // submitRagic
     const PROJECT_ID_WEBHOOK_URL = `${N8N_WEBHOOK_BASE}/6b8220a4-a225-4fc7-9c1e-5010b9b91427`; // 既有：BU案場更新按鈕
@@ -579,8 +593,158 @@
       document.getElementById('navPrev').style.display = selectedFiles.length > 1 && currentIndex > 0 ? '' : 'none';
       document.getElementById('navNext').style.display = selectedFiles.length > 1 && currentIndex < selectedFiles.length - 1 ? '' : 'none';
     }
-    function openLightbox(src) { lightboxImg.src = src; lightbox.classList.add('active'); }
+
+    // ── 終極版 Lightbox (雙指定點縮放 + 單指拖曳 + 下滑關閉) ──
+    let lbScale = 1;
+    let lbTranslateX = 0;
+    let lbTranslateY = 0;
+
+    let lbInitScale = 1;
+    let lbInitTranslateX = 0;
+    let lbInitTranslateY = 0;
+
+    let lbInitPinchDist = 0;
+    let lbInitPinchCenter = { x: 0, y: 0 };
+
+    let lbIsSwipingDown = false;
+    let lbSwipeStartY = 0;
+
+    let lbIsDragging = false;
+    let lbDragStartX = 0;
+    let lbDragStartY = 0;
+
+    function openLightbox(src) {
+      lightboxImg.src = src;
+      lightbox.classList.add('active');
+      // 每次打開時重置所有矩陣狀態
+      lbScale = 1;
+      lbTranslateX = 0;
+      lbTranslateY = 0;
+      updateLightboxTransform();
+      lightbox.style.backgroundColor = `rgba(0, 0, 0, 0.85)`;
+    }
+
+    // 統一處理圖片變形
+    function updateLightboxTransform() {
+      lightboxImg.style.transform = `translate(${lbTranslateX}px, ${lbTranslateY}px) scale(${lbScale})`;
+    }
+
+    // 數學公式：計算兩點之間的距離
+    function getDistance(touches) {
+      return Math.hypot(touches[0].clientX - touches[1].clientX, touches[0].clientY - touches[1].clientY);
+    }
+
+    // 數學公式：計算兩點的中心座標 (這是定點放大的關鍵)
+    function getCenter(touches) {
+      return {
+        x: (touches[0].clientX + touches[1].clientX) / 2,
+        y: (touches[0].clientY + touches[1].clientY) / 2
+      };
+    }
+
+    // 點擊右上角 X 依然可以關閉
     lightboxClose.onclick = () => lightbox.classList.remove('active');
+
+    // 1. 觸控開始 (touchstart)
+    lightbox.addEventListener('touchstart', (e) => {
+      lightboxImg.style.transition = 'none'; // 移除動畫，讓圖片黏著手指
+      lightbox.style.transition = 'none';
+
+      if (e.touches.length === 2) {
+        // 雙指：記錄初始距離與中心點，準備縮放
+        lbIsSwipingDown = false;
+        lbIsDragging = false;
+        lbInitPinchDist = getDistance(e.touches);
+        lbInitPinchCenter = getCenter(e.touches);
+        lbInitScale = lbScale;
+        lbInitTranslateX = lbTranslateX;
+        lbInitTranslateY = lbTranslateY;
+      } else if (e.touches.length === 1) {
+        if (lbScale > 1) {
+          // 單指且圖片已放大：準備「拖曳」看角落細節
+          lbIsDragging = true;
+          lbDragStartX = e.touches[0].clientX - lbTranslateX;
+          lbDragStartY = e.touches[0].clientY - lbTranslateY;
+        } else {
+          // 單指且圖片未放大：準備「下滑關閉」
+          lbIsSwipingDown = true;
+          lbSwipeStartY = e.touches[0].clientY;
+        }
+      }
+    }, { passive: false });
+
+    // 2. 觸控移動 (touchmove)
+    lightbox.addEventListener('touchmove', (e) => {
+      e.preventDefault(); // 阻斷瀏覽器原生的滑動行為
+
+      if (e.touches.length === 2) {
+        // --- 雙指縮放與跟隨 ---
+        const currentDist = getDistance(e.touches);
+        const currentCenter = getCenter(e.touches);
+
+        // 計算縮放比例 (限制 1 倍到 5 倍)
+        lbScale = lbInitScale * (currentDist / lbInitPinchDist);
+        lbScale = Math.max(1, Math.min(lbScale, 5));
+
+        // 【最難的數學邏輯】：計算偏移量，讓圖片在放大的同時，中心點跟著手指移動
+        const scaleRatio = lbScale / lbInitScale;
+        lbTranslateX = currentCenter.x - (lbInitPinchCenter.x - lbInitTranslateX) * scaleRatio;
+        lbTranslateY = currentCenter.y - (lbInitPinchCenter.y - lbInitTranslateY) * scaleRatio;
+
+        updateLightboxTransform();
+
+      } else if (e.touches.length === 1) {
+        // --- 單指操作 ---
+        if (lbIsDragging && lbScale > 1) {
+          // 單指拖曳：移動圖片看局部細節
+          lbTranslateX = e.touches[0].clientX - lbDragStartX;
+          lbTranslateY = e.touches[0].clientY - lbDragStartY;
+          updateLightboxTransform();
+        } else if (lbIsSwipingDown && lbScale === 1) {
+          // 單指下滑關閉
+          const deltaY = Math.max(0, e.touches[0].clientY - lbSwipeStartY);
+          lbTranslateY = deltaY;
+          updateLightboxTransform();
+          
+          // 背景黑底漸層消失
+          const opacity = Math.max(0, 0.85 - (deltaY / (window.innerHeight * 0.8)));
+          lightbox.style.backgroundColor = `rgba(0, 0, 0, ${opacity})`;
+        }
+      }
+    }, { passive: false });
+
+    // 3. 觸控結束 (touchend)
+    lightbox.addEventListener('touchend', (e) => {
+      if (e.touches.length === 0) {
+        // 手指全部離開：加上動畫，準備復原或關閉
+        lightboxImg.style.transition = 'transform 0.25s ease-out';
+        lightbox.style.transition = 'background-color 0.25s ease-out';
+
+        if (lbIsSwipingDown && lbTranslateY > 100) {
+          // 下滑夠深：觸發關閉
+          lightbox.classList.remove('active');
+        } else {
+          // 回正邏輯：如果縮放比例小於等於 1，強制彈回正中央
+          if (lbScale <= 1) {
+            lbScale = 1;
+            lbTranslateX = 0;
+            lbTranslateY = 0;
+          }
+          updateLightboxTransform();
+          lightbox.style.backgroundColor = `rgba(0, 0, 0, 0.85)`;
+        }
+
+        lbIsSwipingDown = false;
+        lbIsDragging = false;
+      } else if (e.touches.length === 1) {
+        // 【無縫接軌】：如果本來是雙指放大，放開一根手指後，立刻將剩餘的那根手指轉為「拖曳模式」
+        if (lbScale > 1) {
+          lbIsDragging = true;
+          lbDragStartX = e.touches[0].clientX - lbTranslateX;
+          lbDragStartY = e.touches[0].clientY - lbTranslateY;
+        }
+      }
+    });
 
     // ── AI 辨識（OCRpre / BUload01）─────────────────────────────
     async function fetchN8nAI(base64Images) {
@@ -600,14 +764,14 @@
       const results = {};
       rawArray.forEach(item => {
         const idx = parseInt(item.index ?? 0);
-        const amount = Number(item.order_amount) || 0;
+        const amount = Number(String(item.order_amount || '').replace(/,/g, '').trim()) || 0;
         const tax = Math.round(amount * 5 / 105);
 
         results[idx] = {
           address: item.recipient_address || '',
           projectId: '',
           orderNumber: item.order_number || item.orderNumber || '',
-          platform: '',
+          platform: item.platform || '',  // <--- 【修改這裡】將 n8n 的資料對應過來          total: amount || '',
           total: amount || '',
           tax: tax || '',
           category: '',
