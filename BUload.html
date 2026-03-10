@@ -780,7 +780,7 @@ results[idx] = {
   category: '',
   
   // 【關鍵修改】：判斷是否有發票號碼，有就顯示發票，沒有就顯示訂單日期
-  memo: invNum ? `此筆圖檔為發票 ${invNum}` : (item.order_date ? `訂單日期：${item.order_date}` : ''),
+  memo: invNum ? `已附加發票圖檔 ${invNum}` : (item.order_date ? `訂單日期：${item.order_date}` : ''),
   
   orderDate: item.order_date || '',
   dataURL: base64Images[idx] || ''
