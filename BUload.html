@@ -449,9 +449,8 @@
 
   <script>
     const N8N_WEBHOOK_BASE = 'https://kh.oneplace.com.tw/webhook';
-    const OCR_WEBHOOK_URL = `${N8N_WEBHOOK_BASE}/BUload1.10`;   // OCRpre
-    // ── [修改1] URL 換成 webhook-test/BUload05 ──
-    const SUBMIT_WEBHOOK_URL = `${N8N_WEBHOOK_BASE}/BUload05`; // submitRagic
+    const OCR_WEBHOOK_URL = `${N8N_WEBHOOK_BASE}/BUload1.10`;   // OCRpre v2.0
+    const SUBMIT_WEBHOOK_URL = `${N8N_WEBHOOK_BASE}/BUloadSubv1.11`; // submitRagic v2.0
     const PROJECT_ID_WEBHOOK_URL = `${N8N_WEBHOOK_BASE}/6b8220a4-a225-4fc7-9c1e-5010b9b91427`; // 既有：BU案場更新按鈕
 
     // ── LINE UID（LIFF 環境由 URL 帶入）──
@@ -964,6 +963,7 @@ results[idx] = {
           projectId:   entry.projectId   || '',
           orderDate:   entry.orderDate   || '',
           orderNumber: entry.orderNumber || '',
+          invoiceNumber: entry.invoiceNumber || '', // <--- 【關鍵修改】：在這裡把它接回去送出！
           platform:    entry.platform    || '',
           total:       entry.total       || '',
           tax:         entry.tax         || '',
