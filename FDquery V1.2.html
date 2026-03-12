@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>收款資料查詢專用</title>
+
+  <meta property="og:title" content="收款資料查詢專用" />
+  <meta property="og:description" content="內部專用快速查詢收款資訊" />
+  <meta property="og:url" content="https://oneplacetw.github.io/temporary/FDquery.html" />
+  <meta property="og:type" content="website" />
+
+  <meta name="description" content="內部專用快速查詢收款資訊" />
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #788A79;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+      margin-right: 8px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body class="min-h-screen" style="background-color: #E8EAEB;">
+  <div id="app" class="flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
+      <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">帳務查詢</h1>
+      </div>
+
+      <div id="stepIndicator" class="flex items-center justify-center mb-8">
+        <div class="flex items-center" style="color: #788A79;">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center text-white font-medium" style="background-color: #788A79;">1</div>
+          <span class="ml-2 text-sm font-medium">查詢</span>
+        </div>
+        <div id="stepLine" class="w-16 h-1 mx-2 bg-gray-300"></div>
+        <div class="flex items-center text-gray-400">
+          <div id="step2Circle" class="w-8 h-8 rounded-full flex items-center justify-center bg-gray-300 font-medium">2</div>
+          <span class="ml-2 text-sm font-medium">回填</span>
+        </div>
+      </div>
+
+      <div id="messageBox" class="mb-6 hidden"></div>
+
+      <div id="step1" class="space-y-6">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">匯款日期</label>
+          <input
+            type="date"
+            id="searchDate"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
+            style="--tw-ring-color: #788A79;"
+          />
+         <p class="text-xs text-gray-500 mt-1">如查詢未果可能為跨日交易，請嘗試調整日期或直接聯繫專員</p>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">請輸入欲查詢之末5碼(數字) </label>
+          <input
+            type="text"
+            id="searchNumber"
+            inputmode="numeric" 
+            pattern="[0-9]*"
+            placeholder="請輸入5位數字"
+            maxlength="5"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
+            style="--tw-ring-color: #788A79;"
+          />
+        </div>
+        
+        <button
+          id="searchBtn"
+          class="w-full text-white py-3 rounded-lg font-medium transition-colors"
+          style="background-color: #788A79;"
+        >
+          🔍 開始查詢
+        </button>
+      </div>
+
+      <div id="step2" class="space-y-6 hidden">
+        <div id="foundDataBox" class="p-4 rounded-lg mb-6" style="background-color: #E8EAEB;">
+          <p class="text-sm font-medium mb-2" style="color: #788A79;">
+            ✓ 已找到匹配資料
+            <span id="matchCount" class="ml-2 px-2 py-1 text-white text-xs rounded-full" style="background-color: #788A79;"></span>
+          </p>
+          <div id="foundDataDetails" class="text-xs space-y-1 mt-3 border-t pt-3" style="color: #788A79; border-color: #788A79;"></div>
+        </div>
+
+        <div id="switchContainer" class="hidden mb-4">
+          <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <p class="text-sm font-medium text-gray-700">請問是否上述資料皆為不同人</p>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="samePersonSwitch" class="sr-only peer">
+              <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#788A79]" style="--tw-ring-color: #788A79;"></div>
+            </label>
+          </div>
+        </div>
+
+        <div id="singleInputMode" class="space-y-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">填寫ＪＧＢid或房間編號</label>
+            <input
+              type="text"
+              id="inputNumber"
+              placeholder="請確實輸入"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
+            style="--tw-ring-color: #788A79;"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">租客姓名</label>
+            <textarea
+              id="inputText"
+              placeholder="請輸入主簽約人全名"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent resize-none"
+              style="--tw-ring-color: #788A79; height: 55px;"
+          ></textarea>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">費用備註</label>
+            <input
+              type="text"
+              id="inputMemo"
+              placeholder="例如：1月房租、訂金、兩押一租、水電費等..."
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
+            style="--tw-ring-color: #788A79;"
+           />
+          </div>
+          
+        </div>
+
+        <div id="multipleInputMode" class="space-y-6 hidden">
+          <div id="multipleInputsContainer"></div>
+        </div>
+
+        <div class="flex gap-3">
+          <button
+            id="resetBtn"
+            class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+          >
+            重新查詢
+          </button>
+          <button
+            id="submitBtn"
+            class="flex-1 text-white py-3 rounded-lg font-medium transition-colors"
+            style="background-color: #788A79;"
+          >
+            📤 送出資料
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ✅ 已更新為最新的部署 URL（個人帳號）
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwgbJzoWEqmg6ieDCDEXNm86YCVHALlcIqmn1mjKiwWEkoymWFUwp8LT9ey4TjTpnqBIg/exec';
+    
+    let foundData = null;
+
+    // 取得元素
+    const searchNumberInput = document.getElementById('searchNumber');
+    const searchDateInput = document.getElementById('searchDate');
+    const searchBtn = document.getElementById('searchBtn');
+    const step1 = document.getElementById('step1');
+    const step2 = document.getElementById('step2');
+    const messageBox = document.getElementById('messageBox');
+    const inputNumber = document.getElementById('inputNumber');
+    const inputText = document.getElementById('inputText');
+    const inputMemo = document.getElementById('inputMemo');
+    const submitBtn = document.getElementById('submitBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const foundDataDetails = document.getElementById('foundDataDetails');
+    const stepLine = document.getElementById('stepLine');
+    const step2Circle = document.getElementById('step2Circle');
+    const switchContainer = document.getElementById('switchContainer');
+    const samePersonSwitch = document.getElementById('samePersonSwitch');
+    const singleInputMode = document.getElementById('singleInputMode');
+    const multipleInputMode = document.getElementById('multipleInputMode');
+    const multipleInputsContainer = document.getElementById('multipleInputsContainer');
+
+    // 限制只能輸入數字,最多5位
+    searchNumberInput.addEventListener('input', (e) => {
+      e.target.value = e.target.value.replace(/\D/g, '').slice(0, 5);
+    });
+    
+    searchNumberInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      searchBtn.click();
+      }
+    });
+
+    searchDateInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      searchBtn.click();
+      }
+    });
+
+    // ✅ Switch 切換事件
+    samePersonSwitch.addEventListener('change', (e) => {
+      const isSamePerson = e.target.checked;
+      if (isSamePerson) {
+        singleInputMode.classList.add('hidden');
+        multipleInputMode.classList.remove('hidden');
+        generateMultipleInputs();
+      } else {
+        singleInputMode.classList.remove('hidden');
+        multipleInputMode.classList.add('hidden');
+      }
+    });
+
+    // 顯示訊息
+    function showMessage(type, text) {
+      messageBox.className = `mb-6 p-4 rounded-lg flex items-center ${
+        type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
+      }`;
+      messageBox.innerHTML = `
+        <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${
+            type === 'success' 
+              ? 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' 
+              : 'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
+          }" />
+        </svg>
+        <span class="text-sm">${text}</span>
+      `;
+      messageBox.classList.remove('hidden');
+    }
+
+    function hideMessage() {
+      messageBox.classList.add('hidden');
+    }
+
+    // 切換到步驟2
+    function goToStep2() {
+      step1.classList.add('hidden');
+      step2.classList.remove('hidden');
+      stepLine.classList.remove('bg-gray-300');
+      stepLine.style.backgroundColor = '#788A79';
+      step2Circle.classList.remove('bg-gray-300');
+      step2Circle.style.backgroundColor = '#788A79';
+      step2Circle.style.color = 'white';
+      step2Circle.parentElement.classList.remove('text-gray-400');
+      step2Circle.parentElement.style.color = '#788A79';
+    }
+
+    // ✅ 生成多筆輸入欄位 (加入了 data-source 和 data-row)
+    function generateMultipleInputs() {
+      const matches = foundData.matches || [{ row: foundData.row, data: foundData.data, source: foundData.source }];
+      let html = '';
+      
+      matches.forEach((match, index) => {
+        html += `
+          <div class="multiple-entry-card border border-gray-200 rounded-lg p-4 bg-white" data-source="${match.source || 'A'}" data-row="${match.row}">
+            <p class="font-semibold text-gray-800 mb-3">第 ${index + 1} 筆</p>
+            <div class="space-y-3">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">JGBid或房間編號</label>
+                <input
+                  type="text"
+                  class="multiple-jgbid w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
+                  style="--tw-ring-color: #788A79;"
+                  placeholder="請確實輸入"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">租客姓名</label>
+                <input
+                  type="text"
+                  class="multiple-tenant w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
+                  style="--tw-ring-color: #788A79;"
+                  placeholder="請輸入文字"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">費用備註</label>
+                <input
+                  type="text"
+                  class="multiple-memo w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
+                  style="--tw-ring-color: #788A79;"
+                  placeholder="例如：1月房租、訂金、兩押一租、水電費等..."
+                />
+              </div>
+            </div>
+          </div>
+        `;
+      });
+      multipleInputsContainer.innerHTML = html;
+    }
+
+    // 重置表單
+    function resetForm() {
+      step1.classList.remove('hidden');
+      step2.classList.add('hidden');
+      searchNumberInput.value = '';
+      searchDateInput.value = '';
+      inputNumber.value = '';
+      inputText.value = '';
+      inputMemo.value = '';
+      foundData = null;
+      hideMessage();
+      
+      const matchCount = document.getElementById('matchCount');
+      if (matchCount) {
+        matchCount.textContent = '';
+      }
+      foundDataDetails.innerHTML = '';
+      switchContainer.classList.add('hidden');
+      samePersonSwitch.checked = false;
+      singleInputMode.classList.remove('hidden');
+      multipleInputMode.classList.add('hidden');
+      multipleInputsContainer.innerHTML = '';
+      
+      stepLine.classList.add('bg-gray-300');
+      stepLine.style.backgroundColor = '';
+      step2Circle.classList.add('bg-gray-300');
+      step2Circle.style.backgroundColor = '';
+      step2Circle.style.color = '';
+      step2Circle.parentElement.classList.add('text-gray-400');
+      step2Circle.parentElement.style.color = '';
+    }
+
+    async function callAppsScript(action, payload) {
+      try {
+        try {
+          const response = await fetch(SCRIPT_URL, {
+            method: 'POST',
+            mode: 'cors',
+            redirect: 'follow',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              action: action,
+              ...payload
+            })
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const text = await response.text();
+          let data;
+          try {
+            data = JSON.parse(text);
+          } catch (e) {
+            throw new Error('伺服器回應格式錯誤: ' + text.substring(0, 100));
+          }
+          return data;
+        } catch (jsonError) {
+          const formData = new FormData();
+          formData.append('action', action);
+          Object.keys(payload).forEach(key => {
+            formData.append(key, payload[key]);
+          });
+
+          const formResponse = await fetch(SCRIPT_URL, {
+            method: 'POST',
+            mode: 'cors',
+            redirect: 'follow',
+            body: formData
+          });
+
+          if (!formResponse.ok) {
+            throw new Error(`HTTP error! status: ${formResponse.status}`);
+          }
+
+          const text = await formResponse.text();
+          let data;
+          try {
+            data = JSON.parse(text);
+          } catch (e) {
+            throw new Error('伺服器回應格式錯誤: ' + text.substring(0, 100));
+          }
+          return data;
+        }
+      } catch (error) {
+        throw error;
+      }
+    }
+
+    // 查詢功能
+    searchBtn.addEventListener('click', async () => {
+      const number = searchNumberInput.value;
+      const date = searchDateInput.value;
+
+      if (!number || !date) {
+        showMessage('error', '請輸入末5碼數字和日期');
+        return;
+      }
+
+      if (number.length !== 5) {
+        showMessage('error', '請輸入完整的5位數字');
+        return;
+      }
+
+      searchBtn.disabled = true;
+      searchBtn.innerHTML = '<div class="spinner"></div>查詢中...';
+      hideMessage();
+
+      try {
+        const data = await callAppsScript('search', {
+          number: number,
+          date: date
+        });
+
+        if (data.found) {
+          foundData = data;
+          
+          const matchCount = document.getElementById('matchCount');
+          if (matchCount) {
+            const count = data.count || (data.matches ? data.matches.length : 1);
+            matchCount.textContent = `共 ${count} 筆`;
+          }
+          
+          const matches = data.matches || (data.row ? [{ row: data.row, data: data.data }] : []);
+          let detailsHTML = '';
+          
+          matches.forEach((match, index) => {
+            detailsHTML += `
+              <div class="mb-3 pb-3 ${index < matches.length - 1 ? 'border-b' : ''}" style="border-color: #788A79;">
+                <p class="font-semibold mb-1" style="color: #788A79;">第 ${index + 1} 筆</p>
+                <p><strong>金額:</strong> ${match.data.amount || '無'}</p>
+                <p><strong>付款銀行:</strong> ${match.data.bank || '無'}</p>
+              </div>
+            `;
+          });
+          
+          foundDataDetails.innerHTML = detailsHTML;
+          const totalCount = data.count || matches.length;
+          showMessage('success', `找到 ${totalCount} 筆匹配資料!`);
+          
+          if (totalCount > 1) {
+            switchContainer.classList.remove('hidden');
+          } else {
+            switchContainer.classList.add('hidden');
+            samePersonSwitch.checked = false;
+          }
+          
+          goToStep2();
+        } else {
+          showMessage('error', data.message || '未找到匹配的資料');
+        }
+      } catch (error) {
+        showMessage('error', '查詢時發生錯誤: ' + error.message);
+      } finally {
+        searchBtn.disabled = false;
+        searchBtn.innerHTML = '🔍 開始查詢';
+      }
+    });
+
+    // 提交功能
+    submitBtn.addEventListener('click', async () => {
+      const isMultipleMode = !multipleInputMode.classList.contains('hidden');
+      const matches = foundData.matches || [{ row: foundData.row, source: foundData.source }];
+      let updateData = [];
+      
+      if (isMultipleMode) {
+        // ✅ 多筆模式：透過 .multiple-entry-card 抓取 source 及內部資料
+        const cards = multipleInputsContainer.querySelectorAll('.multiple-entry-card');
+        let allFilled = true;
+        
+        cards.forEach((card, index) => {
+          const jgbid = card.querySelector('.multiple-jgbid').value.trim();
+          const tenant = card.querySelector('.multiple-tenant').value.trim();
+          const memo = card.querySelector('.multiple-memo').value.trim();
+          
+          if (!jgbid) {
+            allFilled = false;
+            showMessage('error', `第 ${index + 1} 筆的 JGBid/房間編號未填寫`);
+            return;
+          }
+          if (!tenant) {
+            allFilled = false;
+            showMessage('error', `第 ${index + 1} 筆的租客姓名未填寫`);
+            return;
+          }
+          
+          updateData.push({
+            source: card.dataset.source, // 夾帶隱藏的來源標籤
+            row: parseInt(card.dataset.row),
+            columnG: jgbid,
+            columnH: tenant,
+            columnI: memo
+          });
+        });
+        
+        if (!allFilled) return;
+      } else {
+        // ✅ 單一模式：抓取畫面上共用的輸入值，並為每一筆 match 加上對應的 source
+        const numValue = inputNumber.value.trim();
+        const textValue = inputText.value.trim();
+        const memoValue = inputMemo.value.trim();
+        
+        if (!numValue || !textValue) {
+          showMessage('error', '請完整填寫數字和文字');
+          return;
+        }
+
+        matches.forEach(match => {
+          updateData.push({
+            source: match.source || 'A', // 夾帶隱藏的來源標籤
+            row: match.row,
+            columnG: numValue,
+            columnH: textValue,
+            columnI: memoValue
+          });
+        });
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<div class="spinner"></div>送出中...';
+      hideMessage();
+
+      const totalRows = updateData.length;
+      
+      try {
+        const updatePromises = updateData.map(async (data) => {
+          // ✅ 發送資料時將 source 也一併傳給 Apps Script 調度
+          return await callAppsScript('update', {
+            source: data.source,
+            row: data.row,
+            columnG: data.columnG,
+            columnH: data.columnH,
+            columnI: data.columnI
+          });
+        });
+
+        const results = await Promise.all(updatePromises);
+        const failedUpdates = results.filter(r => !r.success);
+        const successCount = results.length - failedUpdates.length;
+
+        if (failedUpdates.length === 0) {
+          showMessage('success', `已成功回寫 ${successCount} 筆資料`);
+          setTimeout(() => resetForm(), 3000);
+        } else {
+          const errorMessages = failedUpdates.map(r => r.error || '未知錯誤').join(', ');
+          showMessage('error', `${successCount} 筆成功，${failedUpdates.length} 筆失敗: ${errorMessages}`);
+        }
+      } catch (error) {
+        showMessage('error', '提交時發生錯誤: ' + error.message);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '📤 送出資料';
+      }
+    });
+
+    // 重新查詢按鈕
+    resetBtn.addEventListener('click', resetForm);
+  </script>
+</body>
+</html>
