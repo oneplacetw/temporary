@@ -5,13 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>收款資料查詢專用</title>
 
-  <!-- Open Graph 基本資訊 -->
   <meta property="og:title" content="收款資料查詢專用" />
   <meta property="og:description" content="內部專用快速查詢收款資訊" />
   <meta property="og:url" content="https://oneplacetw.github.io/temporary/FDquery.html" />
   <meta property="og:type" content="website" />
 
-  <!-- 推薦加上 -->
   <meta name="description" content="內部專用快速查詢收款資訊" />
   
   <script src="https://cdn.tailwindcss.com"></script>
@@ -39,7 +37,6 @@
         <h1 class="text-3xl font-bold text-gray-800 mb-2">帳務查詢</h1>
       </div>
 
-      <!-- 步驟指示器 -->
       <div id="stepIndicator" class="flex items-center justify-center mb-8">
         <div class="flex items-center" style="color: #788A79;">
           <div class="w-8 h-8 rounded-full flex items-center justify-center text-white font-medium" style="background-color: #788A79;">1</div>
@@ -52,37 +49,33 @@
         </div>
       </div>
 
-      <!-- 訊息區 -->
       <div id="messageBox" class="mb-6 hidden"></div>
 
-<!-- 步驟 1: 查詢表單 -->
-<div id="step1" class="space-y-6">
-  <!-- 先顯示日期 -->
-  <div>
-    <label class="block text-sm font-medium text-gray-700 mb-2">匯款日期</label>
-    <input
-      type="date"
-      id="searchDate"
-      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
-      style="--tw-ring-color: #788A79;"
-    />
-   <p class="text-xs text-gray-500 mt-1">如查詢未果可能為跨日交易，請嘗試調整日期或直接聯繫專員</p>
-  </div>
+      <div id="step1" class="space-y-6">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">匯款日期</label>
+          <input
+            type="date"
+            id="searchDate"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
+            style="--tw-ring-color: #788A79;"
+          />
+         <p class="text-xs text-gray-500 mt-1">如查詢未果可能為跨日交易，請嘗試調整日期或直接聯繫專員</p>
+        </div>
 
-  <!-- 再顯示數字 -->
-  <div>
-    <label class="block text-sm font-medium text-gray-700 mb-2">請輸入欲查詢之末5碼(數字) </label>
-    <input
-      type="text"
-      id="searchNumber"
-      inputmode="numeric" 
-      pattern="[0-9]*"
-      placeholder="請輸入5位數字"
-      maxlength="5"
-      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
-      style="--tw-ring-color: #788A79;"
-    />
-  </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">請輸入欲查詢之末5碼(數字) </label>
+          <input
+            type="text"
+            id="searchNumber"
+            inputmode="numeric" 
+            pattern="[0-9]*"
+            placeholder="請輸入5位數字"
+            maxlength="5"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
+            style="--tw-ring-color: #788A79;"
+          />
+        </div>
         
         <button
           id="searchBtn"
@@ -93,7 +86,6 @@
         </button>
       </div>
 
-      <!-- 步驟 2: 填寫表單 (初始隱藏) -->
       <div id="step2" class="space-y-6 hidden">
         <div id="foundDataBox" class="p-4 rounded-lg mb-6" style="background-color: #E8EAEB;">
           <p class="text-sm font-medium mb-2" style="color: #788A79;">
@@ -103,7 +95,6 @@
           <div id="foundDataDetails" class="text-xs space-y-1 mt-3 border-t pt-3" style="color: #788A79; border-color: #788A79;"></div>
         </div>
 
-        <!-- ✅ Switch 切換（僅在多筆資料時顯示） -->
         <div id="switchContainer" class="hidden mb-4">
           <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
             <p class="text-sm font-medium text-gray-700">請問是否上述資料皆為不同人</p>
@@ -114,7 +105,6 @@
           </div>
         </div>
 
-        <!-- ✅ 單一輸入模式（default，switch 未開啟時） -->
         <div id="singleInputMode" class="space-y-6">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">填寫ＪＧＢid或房間編號</label>
@@ -150,7 +140,6 @@
           
         </div>
 
-        <!-- ✅ 多筆輸入模式（switch 開啟時） -->
         <div id="multipleInputMode" class="space-y-6 hidden">
           <div id="multipleInputsContainer"></div>
         </div>
@@ -176,7 +165,7 @@
 
   <script>
     // ✅ 已更新為最新的部署 URL（個人帳號）
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzybO70f0CLiKa8pD9TUnKo0in4NDe5yg22ZuSLi-jznCf007OGyI9QXv24oWwBx_5qTQ/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwJkAAFNEH3gKzeI8ssXxybKxvm2sQfwPcPHtbzLsNmiSoH7_u43pXG1VfDSSSwcAM3YQ/exec';
     
     let foundData = null;
 
@@ -189,7 +178,7 @@
     const messageBox = document.getElementById('messageBox');
     const inputNumber = document.getElementById('inputNumber');
     const inputText = document.getElementById('inputText');
-    const inputMemo = document.getElementById('inputMemo'); //追加memo欄位
+    const inputMemo = document.getElementById('inputMemo');
     const submitBtn = document.getElementById('submitBtn');
     const resetBtn = document.getElementById('resetBtn');
     const foundDataDetails = document.getElementById('foundDataDetails');
@@ -218,17 +207,14 @@
       }
     });
 
-
     // ✅ Switch 切換事件
     samePersonSwitch.addEventListener('change', (e) => {
       const isSamePerson = e.target.checked;
       if (isSamePerson) {
-        // Switch 開啟：顯示多筆輸入模式
         singleInputMode.classList.add('hidden');
         multipleInputMode.classList.remove('hidden');
         generateMultipleInputs();
       } else {
-        // Switch 關閉：顯示單一輸入模式
         singleInputMode.classList.remove('hidden');
         multipleInputMode.classList.add('hidden');
       }
@@ -269,14 +255,14 @@
       step2Circle.parentElement.style.color = '#788A79';
     }
 
-    // ✅ 生成多筆輸入欄位
+    // ✅ 生成多筆輸入欄位 (加入了 data-source 和 data-row)
     function generateMultipleInputs() {
-      const matches = foundData.matches || [{ row: foundData.row, data: foundData.data }];
+      const matches = foundData.matches || [{ row: foundData.row, data: foundData.data, source: foundData.source }];
       let html = '';
       
       matches.forEach((match, index) => {
         html += `
-          <div class="border border-gray-200 rounded-lg p-4 bg-white">
+          <div class="multiple-entry-card border border-gray-200 rounded-lg p-4 bg-white" data-source="${match.source || 'A'}" data-row="${match.row}">
             <p class="font-semibold text-gray-800 mb-3">第 ${index + 1} 筆</p>
             <div class="space-y-3">
               <div>
@@ -285,7 +271,6 @@
                   type="text"
                   class="multiple-jgbid w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
                   style="--tw-ring-color: #788A79;"
-                  data-row="${match.row}"
                   placeholder="請確實輸入"
                 />
               </div>
@@ -295,7 +280,6 @@
                   type="text"
                   class="multiple-tenant w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
                   style="--tw-ring-color: #788A79;"
-                  data-row="${match.row}"
                   placeholder="請輸入文字"
                 />
               </div>
@@ -305,7 +289,6 @@
                   type="text"
                   class="multiple-memo w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
                   style="--tw-ring-color: #788A79;"
-                  data-row="${match.row}"
                   placeholder="例如：1月房租、訂金、兩押一租、水電費等..."
                 />
               </div>
@@ -313,10 +296,7 @@
           </div>
         `;
       });
-      
       multipleInputsContainer.innerHTML = html;
-      
-
     }
 
     // 重置表單
@@ -327,10 +307,10 @@
       searchDateInput.value = '';
       inputNumber.value = '';
       inputText.value = '';
+      inputMemo.value = '';
       foundData = null;
       hideMessage();
       
-      // ✅ 重置匹配筆數顯示和 switch
       const matchCount = document.getElementById('matchCount');
       if (matchCount) {
         matchCount.textContent = '';
@@ -351,11 +331,8 @@
       step2Circle.parentElement.style.color = '';
     }
 
-    // ✅ 修正：處理 Apps Script Web App 的特殊 fetch 需求
-    // Apps Script Web App 會做 302 redirect，需要正確處理
     async function callAppsScript(action, payload) {
       try {
-        // 方法 1: 使用 JSON（優先嘗試）
         try {
           const response = await fetch(SCRIPT_URL, {
             method: 'POST',
@@ -375,22 +352,14 @@
           }
 
           const text = await response.text();
-          console.log('📦 原始回應:', text);
-          
-          // 嘗試解析 JSON
           let data;
           try {
             data = JSON.parse(text);
           } catch (e) {
-            // 如果回應不是 JSON，可能是 HTML 錯誤頁
             throw new Error('伺服器回應格式錯誤: ' + text.substring(0, 100));
           }
-
           return data;
         } catch (jsonError) {
-          console.warn('JSON 方式失敗，改用表單方式:', jsonError);
-          
-          // 方法 2: 改用表單方式提交（Apps Script 更相容）
           const formData = new FormData();
           formData.append('action', action);
           Object.keys(payload).forEach(key => {
@@ -409,19 +378,15 @@
           }
 
           const text = await formResponse.text();
-          console.log('📦 表單回應:', text);
-          
           let data;
           try {
             data = JSON.parse(text);
           } catch (e) {
             throw new Error('伺服器回應格式錯誤: ' + text.substring(0, 100));
           }
-
           return data;
         }
       } catch (error) {
-        console.error('❌ API 呼叫錯誤:', error);
         throw error;
       }
     }
@@ -441,46 +406,26 @@
         return;
       }
 
-      // 顯示載入中
       searchBtn.disabled = true;
       searchBtn.innerHTML = '<div class="spinner"></div>查詢中...';
       hideMessage();
 
-      console.log('🔍 開始查詢:', { number, date });
-      console.log('📡 API URL:', SCRIPT_URL);
-
       try {
-        // ✅ 改用修正後的呼叫方式
         const data = await callAppsScript('search', {
           number: number,
           date: date
         });
 
-        console.log('📦 回應資料:', data);
-        console.log('📦 回應格式檢查:', {
-          hasCount: 'count' in data,
-          hasMatches: 'matches' in data,
-          hasRow: 'row' in data,
-          hasData: 'data' in data
-        });
-
         if (data.found) {
           foundData = data;
           
-          // ✅ 顯示筆數
           const matchCount = document.getElementById('matchCount');
           if (matchCount) {
-            // 優先使用新格式的 count，否則使用 matches 陣列長度，最後才用舊格式的單筆
             const count = data.count || (data.matches ? data.matches.length : 1);
             matchCount.textContent = `共 ${count} 筆`;
-            console.log('📊 顯示筆數:', count);
           }
           
-          // ✅ 顯示所有匹配的資料（簡化版：只顯示金額和付款銀行）
-          // 優先使用新格式的 matches，否則轉換舊格式為陣列
           const matches = data.matches || (data.row ? [{ row: data.row, data: data.data }] : []);
-          console.log('📋 匹配資料陣列:', matches);
-          console.log('📋 匹配資料數量:', matches.length);
           let detailsHTML = '';
           
           matches.forEach((match, index) => {
@@ -494,11 +439,9 @@
           });
           
           foundDataDetails.innerHTML = detailsHTML;
-          
           const totalCount = data.count || matches.length;
           showMessage('success', `找到 ${totalCount} 筆匹配資料!`);
           
-          // ✅ 如果有多筆資料，顯示 switch
           if (totalCount > 1) {
             switchContainer.classList.remove('hidden');
           } else {
@@ -511,7 +454,6 @@
           showMessage('error', data.message || '未找到匹配的資料');
         }
       } catch (error) {
-        console.error('❌ 查詢錯誤:', error);
         showMessage('error', '查詢時發生錯誤: ' + error.message);
       } finally {
         searchBtn.disabled = false;
@@ -521,33 +463,25 @@
 
     // 提交功能
     submitBtn.addEventListener('click', async () => {
-      // ✅ 檢查是否為多筆輸入模式
       const isMultipleMode = !multipleInputMode.classList.contains('hidden');
-      const matches = foundData.matches || [{ row: foundData.row }];
-      const memoInputs = multipleInputsContainer.querySelectorAll('.multiple-memo');
-      
+      const matches = foundData.matches || [{ row: foundData.row, source: foundData.source }];
       let updateData = [];
       
       if (isMultipleMode) {
-        // 多筆輸入模式：每筆資料都有獨立的欄位
-        const jgbidInputs = multipleInputsContainer.querySelectorAll('.multiple-jgbid');
-        const tenantInputs = multipleInputsContainer.querySelectorAll('.multiple-tenant');
-        const memoInputs = multipleInputsContainer.querySelectorAll('.multiple-memo');
-        
-        // 驗證所有欄位都已填寫
+        // ✅ 多筆模式：透過 .multiple-entry-card 抓取 source 及內部資料
+        const cards = multipleInputsContainer.querySelectorAll('.multiple-entry-card');
         let allFilled = true;
-        jgbidInputs.forEach((input, index) => {
-          const jgbid = input.value.trim();
-          const tenant = tenantInputs[index].value.trim();
-          const memo = memoInputs[index].value.trim();
+        
+        cards.forEach((card, index) => {
+          const jgbid = card.querySelector('.multiple-jgbid').value.trim();
+          const tenant = card.querySelector('.multiple-tenant').value.trim();
+          const memo = card.querySelector('.multiple-memo').value.trim();
           
-          // ✅ 驗證 JGBid 是否為數字
-        if (!jgbid) {
-          allFilled = false;
-          showMessage('error', `第 ${index + 1} 筆的 JGBid/房間編號未填寫`);
-          return;
+          if (!jgbid) {
+            allFilled = false;
+            showMessage('error', `第 ${index + 1} 筆的 JGBid/房間編號未填寫`);
+            return;
           }
-          
           if (!tenant) {
             allFilled = false;
             showMessage('error', `第 ${index + 1} 筆的租客姓名未填寫`);
@@ -555,18 +489,17 @@
           }
           
           updateData.push({
-            row: parseInt(input.dataset.row),
+            source: card.dataset.source, // 夾帶隱藏的來源標籤
+            row: parseInt(card.dataset.row),
             columnG: jgbid,
             columnH: tenant,
             columnI: memo
           });
         });
         
-        if (!allFilled) {
-          return;
-        }
+        if (!allFilled) return;
       } else {
-        // 單一輸入模式：所有資料共用同一組輸入
+        // ✅ 單一模式：抓取畫面上共用的輸入值，並為每一筆 match 加上對應的 source
         const numValue = inputNumber.value.trim();
         const textValue = inputText.value.trim();
         const memoValue = inputMemo.value.trim();
@@ -576,10 +509,9 @@
           return;
         }
 
-
-        // 所有匹配的 row 都使用相同的值
         matches.forEach(match => {
           updateData.push({
+            source: match.source || 'A', // 夾帶隱藏的來源標籤
             row: match.row,
             columnG: numValue,
             columnH: textValue,
@@ -588,24 +520,17 @@
         });
       }
 
-      // 顯示載入中
       submitBtn.disabled = true;
       submitBtn.innerHTML = '<div class="spinner"></div>送出中...';
       hideMessage();
 
       const totalRows = updateData.length;
       
-      console.log('📤 開始提交:', { 
-        totalRows: totalRows, 
-        updateData: updateData,
-        isMultipleMode: isMultipleMode
-      });
-
       try {
-        // ✅ 對所有需要更新的 row 執行更新
-        const updatePromises = updateData.map(async (data, index) => {
-          console.log(`📝 更新第 ${index + 1}/${totalRows} 筆: 第 ${data.row} 行`);
+        const updatePromises = updateData.map(async (data) => {
+          // ✅ 發送資料時將 source 也一併傳給 Apps Script 調度
           return await callAppsScript('update', {
+            source: data.source,
             row: data.row,
             columnG: data.columnG,
             columnH: data.columnH,
@@ -613,18 +538,9 @@
           });
         });
 
-        // 等待所有更新完成
         const results = await Promise.all(updatePromises);
-        
-        // 檢查是否有失敗的更新
         const failedUpdates = results.filter(r => !r.success);
         const successCount = results.length - failedUpdates.length;
-
-        console.log('📦 更新結果:', { 
-          total: results.length, 
-          success: successCount, 
-          failed: failedUpdates.length 
-        });
 
         if (failedUpdates.length === 0) {
           showMessage('success', `已成功回寫 ${successCount} 筆資料`);
@@ -634,7 +550,6 @@
           showMessage('error', `${successCount} 筆成功，${failedUpdates.length} 筆失敗: ${errorMessages}`);
         }
       } catch (error) {
-        console.error('❌ 提交錯誤:', error);
         showMessage('error', '提交時發生錯誤: ' + error.message);
       } finally {
         submitBtn.disabled = false;
@@ -644,10 +559,6 @@
 
     // 重新查詢按鈕
     resetBtn.addEventListener('click', resetForm);
-
-    // 頁面載入完成
-    console.log('✅ 頁面已載入完成');
-    console.log('📡 API URL:', SCRIPT_URL);
   </script>
 </body>
 </html>
